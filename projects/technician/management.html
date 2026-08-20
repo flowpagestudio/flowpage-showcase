@@ -3,43 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ניהול המערכת | FlowPage Demo</title>
+  <title>ניהול המערכת | טכנאי מחשבים</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../style.css">
 </head>
-<body>
-  <main class="management">
+<body class="owner-portal">
+  <main>
     <nav class="nav">
       <a class="logo" href="../../">FLOW<span>PAGE</span><small>STUDIO</small></a>
       <a class="nav-link" href="index.html">חזרה לאתר</a>
     </nav>
-    <section>
-      <div class="management-head">
-        <div>
-          <p class="eyebrow">מרחב פרטי לבעל העסק</p>
-          <h2>ניהול המערכת</h2>
-        </div>
-        <p class="management-lead">כל פנייה שמתקבלת באתר נכנסת לכאן כשהיא מסודרת. בעל העסק מטפל, מעדכן סטטוס — והלקוח מקבל עדכון מתאים באופן אוטומטי.</p>
+    <section class="portal-hero">
+      <p class="portal-kicker"><i></i> מרחב פרטי לבעל העסק</p>
+      <h1>ניהול <em>המערכת.</em></h1>
+      <p>כל פנייה נכנסת לכאן כשהיא כבר מסודרת. אתה רואה מה קרה, בוחר את הצעד הבא, והלקוח מקבל עדכון ברור בלי לרדוף אחרי הודעות.</p>
+      <div class="portal-stats">
+        <div class="portal-stat"><b>03</b><span>פניות פעילות</span></div>
+        <div class="portal-stat"><b>01</b><span>ממתינה לשיחה</span></div>
+        <div class="portal-stat"><b>02</b><span>טופלו היום</span></div>
       </div>
-      <div class="management-board">
-        <section class="management-card">
-          <header><h3>פניות פעילות</h3><span class="private-chip">גישה מורשית בלבד</span></header>
-          <div class="request-row"><span class="request-id">#1048</span><div><strong>מחשב נייד איטי</strong><small>נפתחה היום · צורפה תמונה</small></div><span class="request-state">חדש</span></div>
-          <div class="request-row"><span class="request-id">#1047</span><div><strong>בעיה בהתחברות לאינטרנט</strong><small>נדרש בירור קצר לפני ביקור</small></div><span class="request-state call">שיחה לקביעת מועד</span></div>
-          <div class="request-row"><span class="request-id">#1046</span><div><strong>התקנת תוכנות במחשב חדש</strong><small>מועד ביקור כבר נקבע</small></div><span class="request-state">טופל</span></div>
+    </section>
+    <section class="portal-desk">
+      <div class="portal-desk-head"><div><p class="eyebrow">תצוגת עבודה</p><h2>פניות שדורשות טיפול</h2></div><p>הכול מסודר במקום אחד.</p></div>
+      <div class="portal-layout">
+        <section class="portal-list">
+          <header><h3>פניות פעילות</h3><span class="private-badge">גישה מורשית בלבד</span></header>
+          <div class="portal-request"><span class="id">#1048</span><div><strong>מחשב נייד איטי</strong><small>נפתחה היום · צורפה תמונה</small></div><span class="portal-state">חדש</span></div>
+          <div class="portal-request"><span class="id">#1047</span><div><strong>בעיה בהתחברות לאינטרנט</strong><small>נדרש בירור קצר לפני ביקור</small></div><span class="portal-state soft">שיחה לקביעת מועד</span></div>
+          <div class="portal-request"><span class="id">#1046</span><div><strong>התקנת תוכנות במחשב חדש</strong><small>מועד ביקור כבר נקבע</small></div><span class="portal-state">טופל</span></div>
         </section>
-        <aside class="management-card">
-          <header><h3>פעולות פשוטות</h3></header>
-          <div class="management-actions">
-            <div><b>עדכון סטטוס</b><span>חדש, בבדיקה, שיחה או טופל</span></div>
-            <div><b>קביעת המשך טיפול</b><span>יומן ופרטי הלקוח במקום אחד</span></div>
-            <div><b>עדכון אוטומטי ללקוח</b><span>מייל קצר נשלח לפי הסטטוס</span></div>
-          </div>
+        <aside class="portal-actions">
+          <header><h3>מה עושים מכאן?</h3></header>
+          <div class="portal-action"><span class="portal-action-num">01</span><div><b>מעדכנים סטטוס</b><p>חדש, בבדיקה, שיחה או טופל.</p></div></div>
+          <div class="portal-action"><span class="portal-action-num">02</span><div><b>קובעים המשך טיפול</b><p>פרטי הלקוח והיומן באותו תהליך.</p></div></div>
+          <div class="portal-action"><span class="portal-action-num">03</span><div><b>הלקוח מתעדכן</b><p>נשלח אליו מייל קצר לפי הסטטוס שבחרת.</p></div></div>
         </aside>
       </div>
-      <p class="management-note"><b>פרטיות כברירת מחדל:</b> הפניות, הקבצים, היומן ומסך הניהול אינם חשופים באתר הציבורי. בגירסה הפעילה, הכניסה תתבצע באמצעות חשבון Google מורשה של בעל העסק.</p>
+      <div class="portal-privacy"><span class="lock">◼</span><p><b>פרטיות כברירת מחדל.</b> הפניות, הקבצים, היומן ומסך זה אינם מוצגים באתר הציבורי. בגרסה הפעילה הכניסה תיעשה עם חשבון Google מורשה של בעל העסק.</p></div>
     </section>
   </main>
   <footer>PRIVATE MANAGEMENT DEMO · FLOWPAGE STUDIO · 2026</footer>
