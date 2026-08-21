@@ -196,3 +196,6 @@ function assertOwner_() {
   // and deploy the management view with "Only myself".
   return true;
 }
+
+
+function getGalleryData(){const sh=SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('גלריה');const v=sh.getDataRange().getValues();return v.slice(1).map((r,i)=>({row:i+2,slot:r[0],title:r[1],description:r[2],fileId:r[3],url:r[4],active:r[5]}));}
