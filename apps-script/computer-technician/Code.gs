@@ -201,3 +201,5 @@ function assertOwner_() {
 function getGalleryData(){const sh=SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('גלריה');const v=sh.getDataRange().getValues();return v.slice(1).map((r,i)=>({row:i+2,slot:r[0],title:r[1],description:r[2],fileId:r[3],url:r[4],active:r[5]}));}
 
 function replaceGalleryImage(slot,file){const sh=SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('גלריה');const v=sh.getDataRange().getValues();const i=v.findIndex((r,n)=>n>0&&r[0]===slot);if(i<1)throw new Error('מיקום גלריה לא נמצא');const blob=Utilities.newBlob(Utilities.base64Decode(file.base64),file.mimeType,file.name);const saved=DriveApp.getFolderById(CONFIG.ATTACHMENTS_FOLDER_ID).createFile(blob);sh.getRange(i+1,4).setValue(saved.getId());sh.getRange(i+1,5).setValue('https://drive.google.com/thumbnail?id='+saved.getId()+'&sz=w1600');return getGalleryData();}
+
+function getPublicGallery(){return getGalleryData().filter(x=>x.active==='כן').map(x=>({slot:x.slot,url:x.url,title:x.title,description:x.description}));}
