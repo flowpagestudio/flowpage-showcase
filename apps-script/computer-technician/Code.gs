@@ -20,11 +20,11 @@ const HEADERS = [
   'סטטוס', 'מזהה אירוע ביומן', 'קבצים מצורפים', 'הודעת אישור', 'עדכון אחרון'
 ];
 
-function doGet() {
-  return HtmlService.createTemplateFromFile('Index')
-    .evaluate()
-    .setTitle('פנייה לטכנאי מחשבים')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+function doGet(e) {
+  if (e && e.parameter && e.parameter.view === 'management') {
+    return HtmlService.createTemplateFromFile('Management').evaluate().setTitle('ניהול המערכת');
+  }
+  return HtmlService.createTemplateFromFile('Index').evaluate().setTitle('פנייה לטכנאי מחשבים').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 /**
@@ -175,3 +175,19 @@ function notifyCustomer_(leadId, p, event) {
 function sanitizeFileName_(name) {
   return String(name || 'attachment').replace(/[\\/:*?"<>|]/g, '_');
 }
+
+function getManagementData() {
+  assertOwner_();
+  const rows=getSheet_().getDataRange().getValues(), heads=rows.shift();
+  const leads=rows.filter(r=>r[0]).map((r,i)=>{const x={};heads.forEach((h,j)=>x[h]=r[j]);return {row:i+2,id:x['מזהה פנייה'],name:x['שם מלא'],phone:x['טלפון'],email:x['אימייל'],issue:x['סוג תקלה'],description:x['תיאור התקלה'],status:x['סטטוס']||'חדש',eventId:x['מזהה אירוע ביומן'],files:String(x['קבצים מצורפים']||'').split('\n').filter(Boolean)}});
+  return {leads:leads.reverse(),newCount:leads.filter(x=>x.status==='חדש').length};
+}
+function updateLeadStatus(id,status) {
+  assertOwner_();
+  const allowed=['חדש','בטיפול','נקבע ביומן','הושלם','בוטל']; if(!allowed.includes(status)) throw new Error('סטטוס לא תקין');
+  const sh=getSheet_(), rows=sh.getDataRange().getValues(), i=rows.findIndex((r,n)=>n>0&&r[0]===id); if(i<1) throw new Error('פנייה לא נמצאה');
+  sh.getRange(i+1,12).setValue(status); sh.getRange(i+1,16).setValue(new Date());
+  GmailApp.sendEmail(rows[i][4],'עדכון לפנייה שלך | '+id,'שלום '+rows[i][2]+',\n\nסטטוס הפנייה עודכן ל: '+status+'\n\nתודה,\n'+CONFIG.BUSINESS_NAME);
+  return {ok:true};
+}
+function assertOwner_(){const email=Session.getActiveUser().getEmail().toLowerCase();if(email!==CONFIG.OWNER_EMAIL.toLowerCase())throw new Error('אין הרשאה לניהול המערכת');}
