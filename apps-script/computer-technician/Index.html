@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#15251e;--lime:#d7f255;--paper:#f7f7f1;--muted:#718078;--line:#ccd2cb}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Heebo,Arial,sans-serif}
+    .nav{height:76px;display:flex;justify-content:space-between;align-items:center;max-width:1180px;margin:auto;padding:0 28px;border-bottom:1px solid #e1e6de}
+    .logo{font:700 23px/16px 'Space Grotesk',sans-serif;letter-spacing:-1px}.logo span{color:#7b9d00}.logo small{display:block;font:700 9px/11px 'Space Grotesk';letter-spacing:3px}
+    main{overflow:hidden}.hero{min-height:370px;padding:75px max(28px,calc((100vw - 1124px)/2)) 60px;background:radial-gradient(circle at 10% 5%,#e8f7b9 0,transparent 30%),var(--paper)}
+    .eyebrow{font:700 12px 'Space Grotesk';letter-spacing:2px;color:#6e8500;margin:0 0 20px}.hero h1{font-size:clamp(46px,7vw,82px);line-height:.98;letter-spacing:-3px;margin:0}.hero em{font-style:normal;color:#739100}.intro{font-size:19px;line-height:1.6;max-width:550px;margin:27px 0 0;color:#4e5e55}
+    .form-section{padding:78px max(28px,calc((100vw - 900px)/2));background:#e9ece5}.form-section h2{font-size:clamp(34px,5vw,56px);line-height:1;margin:0}.note{color:var(--muted);margin:13px 0 0;line-height:1.6}
+    form{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:32px}label{font-weight:700}label span{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:2px}
+    input,select,textarea{font:16px Heebo;width:100%;display:block;margin-top:7px;padding:12px;border:1px solid #b9c2b8;background:white;color:var(--ink);border-radius:0}textarea{min-height:120px;resize:vertical}.wide{grid-column:1/-1}
+    .button{display:inline-flex;gap:30px;align-items:center;justify-content:center;background:var(--ink);padding:15px 22px;color:white;text-decoration:none;font:700 16px Heebo;border:0;cursor:pointer;transition:.2s;justify-self:start}.button:hover{transform:translate(-4px,-4px);box-shadow:5px 5px 0 var(--lime)}.button:disabled{opacity:.65;cursor:wait;transform:none;box-shadow:none}.button b{font-size:21px}
+    .result{display:none;grid-column:1/-1;padding:16px 18px;line-height:1.6;font-weight:700}.result.ok{display:block;background:#e8f7b9;border-right:4px solid #739100}.result.err{display:block;background:#ffe8e3;border-right:4px solid #b54d36}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-block:1px solid var(--line)}.steps article{background:var(--paper);padding:36px max(22px,calc((100vw - 1124px)/6));min-height:190px}.steps span{font:700 14px 'Space Grotesk';color:#779400}.steps h3{font-size:23px;margin:28px 0 7px}.steps p{color:var(--muted);line-height:1.6;margin:0}footer{background:var(--ink);color:#9baaa1;text-align:center;padding:22px;font:11px 'Space Grotesk';letter-spacing:2px}
+    @media(max-width:700px){.nav{height:68px;padding:0 20px}.hero{padding:58px 22px 48px;min-height:330px}.hero h1{letter-spacing:-2px}.intro{font-size:18px}.form-section{padding:58px 22px}form{grid-template-columns:1fr}.wide{grid-column:auto}.button{width:100%}.steps{grid-template-columns:1fr}.steps article{padding:30px 22px;min-height:auto}.steps h3{margin:20px 0 6px}}
+  </style>
+</head>
+<body>
+  <main>
+    <nav class="nav"><div class="logo">FLOW<span>PAGE</span><small>STUDIO</small></div><div>פנייה מסודרת</div></nav>
+    <section class="hero">
+      <p class="eyebrow">CASE 01 · COMPUTER TECHNICIAN</p>
+      <h1>המחשב עושה בעיות?<br><em>מתחילים מאבחון נכון.</em></h1>
+      <p class="intro">כמה פרטים קצרים יעזרו להבין מה קורה ולחזור אליך עם הצעד הבא. אפשר גם לצרף צילום מסך או מסמך.</p>
+    </section>
+    <section class="form-section">
+      <p class="eyebrow">בקשה מסודרת</p>
+      <h2>ספר לי מה קורה במחשב</h2>
+      <p class="note">הפרטים נשלחים ישירות לטכנאי, יחד עם הקבצים שתצרף.</p>
+      <form id="leadForm">
+        <label>שם מלא*<input name="fullName" required></label>
+        <label>טלפון*<input name="phone" type="tel" required></label>
+        <label>אימייל*<input name="email" type="email" required></label>
+        <label>סוג תקלה*<select name="issueType" required><option value="">בחר/י</option><option>מחשב לא נדלק</option><option>איטי / נתקע</option><option>וירוס / אבטחה</option><option>אינטרנט / רשת</option><option>גיבוי / העברת מידע</option><option>אחר</option></select></label>
+        <label>מותג / דגם<input name="deviceModel" placeholder="אם ידוע"></label>
+        <label>סוג שירות*<select name="serviceType" required><option value="">בחר/י</option><option>ביקור טכנאי</option><option>ייעוץ מרחוק</option><option>אבחון / הצעת מחיר</option></select></label>
+        <label class="wide">תיאור הבעיה*<textarea name="description" required placeholder="מה קורה? מתי זה התחיל?"></textarea></label>
+        <label>כתובת <span>נדרש לביקור</span><input name="address"></label>
+        <label>מועד מועדף <span>לביקור טכנאי</span><input name="preferredDateTime" type="datetime-local"></label>
+        <label class="wide">צילום מסך או מסמך <span>JPG, PNG או PDF · עד 8MB לכל קובץ</span><input name="files" type="file" accept="image/jpeg,image/png,application/pdf" multiple></label>
+        <button id="submit" class="button wide" type="submit">שליחת פנייה <b>←</b></button>
+        <div id="result" class="result"></div>
+      </form>
+    </section>
+    <section class="steps"><article><span>01</span><h3>מתארים את התקלה</h3><p>לא צריך מונחים טכניים. פשוט מספרים מה קורה.</p></article><article><span>02</span><h3>מצרפים אם צריך</h3><p>צילום מסך או קובץ עוזרים להבין את המצב מהר יותר.</p></article><article><span>03</span><h3>מקבלים כיוון</h3><p>הפנייה מתקבלת אצל הטכנאי והוא חוזר אליך עם הצעד הבא.</p></article></section>
+  </main>
+  <footer>DEMO PROJECT · FLOWPAGE STUDIO · 2026</footer>
+<script>
+const form=document.getElementById('leadForm'),button=document.getElementById('submit'),result=document.getElementById('result');
+form.addEventListener('submit',async event=>{event.preventDefault();button.disabled=true;button.innerHTML='שולח...';result.className='result';try{const data=new FormData(form),attachments=await Promise.all([...form.elements.files.files].map(readFile)),payload=Object.fromEntries(data.entries());delete payload.files;payload.attachments=attachments;google.script.run.withSuccessHandler(showSuccess).withFailureHandler(showError).submitLead(payload)}catch(error){showError(error.message||'לא ניתן לקרוא את הקובץ.')}});
+function readFile(file){return new Promise((resolve,reject)=>{if(file.size>8*1024*1024)return reject(new Error('כל קובץ מוגבל ל־8MB.'));const reader=new FileReader();reader.onload=()=>resolve({name:file.name,mimeType:file.type,size:file.size,base64:String(reader.result).split(',')[1]});reader.onerror=()=>reject(new Error('קריאת הקובץ נכשלה.'));reader.readAsDataURL(file)})}
+function showSuccess(data){result.className='result ok';result.textContent=data.message+' מספר הפנייה שלך: '+data.leadId;form.reset();button.disabled=false;button.innerHTML='שליחת פנייה <b>←</b>'}
+function showError(error){result.className='result err';result.textContent=error.message||String(error);button.disabled=false;button.innerHTML='שליחת פנייה <b>←</b>'}
+</script>
+</body>
+</html>
