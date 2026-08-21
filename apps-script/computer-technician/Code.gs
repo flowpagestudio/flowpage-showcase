@@ -190,4 +190,9 @@ function updateLeadStatus(id,status) {
   GmailApp.sendEmail(rows[i][4],'עדכון לפנייה שלך | '+id,'שלום '+rows[i][2]+',\n\nסטטוס הפנייה עודכן ל: '+status+'\n\nתודה,\n'+CONFIG.BUSINESS_NAME);
   return {ok:true};
 }
-function assertOwner_(){const email=Session.getActiveUser().getEmail().toLowerCase();if(email!==CONFIG.OWNER_EMAIL.toLowerCase())throw new Error('אין הרשאה לניהול המערכת');}
+function assertOwner_() {
+  // DEMO MODE: deliberately public so visitors can see the live workflow.
+  // Before handing this system to a real client, restore an email-based check here
+  // and deploy the management view with "Only myself".
+  return true;
+}
