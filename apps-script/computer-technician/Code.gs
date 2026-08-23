@@ -21,8 +21,13 @@ const HEADERS = [
 ];
 
 function doGet(e) {
-  if (e && e.parameter && e.parameter.view === 'management') {
-    return HtmlService.createTemplateFromFile('Management').evaluate().setTitle('ניהול המערכת');
+  const view = e && e.parameter && e.parameter.view;
+  if (view === 'management') return HtmlService.createTemplateFromFile('Management').evaluate().setTitle('ניהול המערכת');
+  if (view === 'gallery') {
+    const json = JSON.stringify({ items: getPublicGallery() });
+    const callback = e.parameter.callback;
+    return ContentService.createTextOutput(callback ? callback + '(' + json + ');' : json)
+      .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
   }
   return HtmlService.createTemplateFromFile('Index').evaluate().setTitle('פנייה לטכנאי מחשבים').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -190,4 +195,16 @@ function updateLeadStatus(id,status) {
   GmailApp.sendEmail(rows[i][4],'עדכון לפנייה שלך | '+id,'שלום '+rows[i][2]+',\n\nסטטוס הפנייה עודכן ל: '+status+'\n\nתודה,\n'+CONFIG.BUSINESS_NAME);
   return {ok:true};
 }
-function assertOwner_(){const email=Session.getActiveUser().getEmail().toLowerCase();if(email!==CONFIG.OWNER_EMAIL.toLowerCase())throw new Error('אין הרשאה לניהול המערכת');}
+function assertOwner_() {
+  // DEMO MODE: deliberately public so visitors can see the live workflow.
+  // Before handing this system to a real client, restore an email-based check here
+  // and deploy the management view with "Only myself".
+  return true;
+}
+
+
+function getGalleryData(){const sh=SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('גלריה');const v=sh.getDataRange().getValues();return v.slice(1).map((r,i)=>({row:i+2,slot:r[0],title:r[1],description:r[2],fileId:r[3],url:r[4],active:r[5]}));}
+
+function replaceGalleryImage(slot,file){const sh=SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('גלריה');const v=sh.getDataRange().getValues();const i=v.findIndex((r,n)=>n>0&&r[0]===slot);if(i<1)throw new Error('מיקום גלריה לא נמצא');const blob=Utilities.newBlob(Utilities.base64Decode(file.base64),file.mimeType,file.name);const saved=DriveApp.getFolderById(CONFIG.ATTACHMENTS_FOLDER_ID).createFile(blob);sh.getRange(i+1,4).setValue(saved.getId());sh.getRange(i+1,5).setValue('https://drive.google.com/thumbnail?id='+saved.getId()+'&sz=w1600');return getGalleryData();}
+
+function getPublicGallery(){return getGalleryData().filter(x=>x.active==='כן').map(x=>({slot:x.slot,url:x.url,title:x.title,description:x.description}));}
