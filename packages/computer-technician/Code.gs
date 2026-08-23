@@ -192,37 +192,33 @@ function submitLead(payload) {
 function getManagementData() {
   assertOwner_();
   const sheet = getSheet_();
-  const range = sheet.getDataRange();
-  const values = range.getNumRows() ? range.getValues() : [HEADERS];
-  const rows = values.slice();
-  const heads = (rows.shift() || HEADERS).map(function(h) { return String(h || ''); });
-  const leads = rows
-    .filter(function(r) { return r[0]; })
-    .map(function(r, i) {
-      const x = {};
-      heads.forEach(function(h, j) { x[h] = r[j]; });
-      return {
-        row: i + 2,
-        id: String(x['מזהה פנייה'] || ''),
-        name: String(x['שם מלא'] || ''),
-        phone: String(x['טלפון'] || ''),
-        email: String(x['אימייל'] || ''),
-        issue: String(x['סוג תקלה'] || ''),
-        device: String(x['מותג / דגם'] || ''),
-        description: String(x['תיאור התקלה'] || ''),
-        address: String(x['כתובת'] || ''),
-        serviceType: String(x['סוג שירות'] || ''),
-        preferredDateTime: stringifyCell_(x['מועד מועדף']),
-        status: String(x['סטטוס'] || 'חדש'),
-        eventId: String(x['מזהה אירוע ביומן'] || ''),
-        files: String(x['קבצים מצורפים'] || '').split('\n').filter(Boolean),
-        updatedAt: stringifyCell_(x['עדכון אחרון'])
-      };
-    })
-    .reverse();
+  const lastRow = Math.max(sheet.getLastRow(), 1);
+  const lastCol = Math.max(sheet.getLastColumn(), HEADERS.length);
+  // Display strings only — Date objects from getValues() make google.script.run return null.
+  const values = sheet.getRange(1, 1, lastRow, lastCol).getDisplayValues();
+  const rows = values.slice(1).filter(function(r) { return String(r[0] || '').trim(); });
 
-  // Plain JSON-safe payload — avoids google.script.run handing null to the UI.
-  return JSON.parse(JSON.stringify({
+  const leads = rows.map(function(r, i) {
+    return {
+      row: i + 2,
+      id: String(r[0] || ''),
+      name: String(r[2] || ''),
+      phone: String(r[3] || ''),
+      email: String(r[4] || ''),
+      issue: String(r[5] || ''),
+      device: String(r[6] || ''),
+      description: String(r[7] || ''),
+      address: String(r[8] || ''),
+      serviceType: String(r[9] || ''),
+      preferredDateTime: String(r[10] || ''),
+      status: String(r[11] || 'חדש'),
+      eventId: String(r[12] || ''),
+      files: String(r[13] || '').split('\n').filter(Boolean),
+      updatedAt: String(r[15] || '')
+    };
+  }).reverse();
+
+  const payload = {
     ok: true,
     leads: leads,
     newCount: leads.filter(function(x) { return x.status === 'חדש'; }).length,
@@ -230,7 +226,10 @@ function getManagementData() {
       return x.status === 'חדש' || x.status === 'בטיפול' || x.status === 'נקבע ביומן';
     }).length,
     statuses: LEAD_STATUSES.slice()
-  }));
+  };
+
+  // String transport is the most reliable bridge for google.script.run.
+  return JSON.stringify(payload);
 }
 
 function updateLeadStatus(id, status) {

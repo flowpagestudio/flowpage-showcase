@@ -336,21 +336,31 @@
       });
     }
 
-    function fail(err) {
+    function fail(err, targetId) {
       var msg = (err && err.message) ? err.message : String(err || 'שגיאה לא ידועה');
       var box = document.createElement('div');
       box.className = 'error';
       box.textContent = msg;
-      var leads = document.getElementById('leadsOut');
-      if (leads && !leads.querySelector('.error')) leads.prepend(box.cloneNode(true));
-      var gallery = document.getElementById('galleryOut');
-      if (gallery && !gallery.querySelector('.error')) gallery.prepend(box);
+      var id = targetId || 'leadsOut';
+      var el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '';
+        el.appendChild(box);
+      }
     }
 
-    function showLeads(data) {
+    function showLeads(raw) {
       var out = document.getElementById('leadsOut');
+      var data = raw;
+      try {
+        if (typeof raw === 'string') data = JSON.parse(raw);
+      } catch (e) {
+        fail(new Error('תשובת השרת אינה תקינה. פרסמו New version אחרי עדכון Code.gs.'));
+        return;
+      }
+
       if (!data || typeof data !== 'object') {
-        fail(new Error('לא התקבלו נתוני פניות מהשרת. שמרו את Code.gs ופרסמו New version.'));
+        fail(new Error('לא התקבלו נתוני פניות מהשרת. שמרו Code.gs + Management ופרסמו New version.'));
         return;
       }
 
@@ -401,7 +411,7 @@
           select.disabled = true;
           google.script.run
             .withSuccessHandler(function() { loadLeads(); })
-            .withFailureHandler(function(e) { select.disabled = false; fail(e); })
+            .withFailureHandler(function(e) { select.disabled = false; fail(e, 'leadsOut'); })
             .updateLeadStatus(lead.id, select.value);
         });
 
@@ -440,7 +450,7 @@
           toggle.disabled = true;
           google.script.run
             .withSuccessHandler(function() { loadGallery(); })
-            .withFailureHandler(function(e) { toggle.disabled = false; fail(e); })
+            .withFailureHandler(function(e) { toggle.disabled = false; fail(e, 'galleryOut'); })
             .setGalleryActive(item.slot, toggle.checked);
         });
 
@@ -449,7 +459,7 @@
           var file = fileInput.files[0];
           if (!file) return;
           if (file.size > 8 * 1024 * 1024) {
-            fail(new Error('כל קובץ מוגבל ל־8MB.'));
+            fail(new Error('כל קובץ מוגבל ל־8MB.'), 'galleryOut');
             fileInput.value = '';
             return;
           }
@@ -457,7 +467,7 @@
           reader.onload = function() {
             google.script.run
               .withSuccessHandler(function() { loadGallery(); })
-              .withFailureHandler(fail)
+              .withFailureHandler(function(e) { fail(e, 'galleryOut'); })
               .replaceGalleryImage(item.slot, {
                 name: file.name,
                 mimeType: file.type,
@@ -465,7 +475,7 @@
                 base64: String(reader.result).split(',')[1]
               });
           };
-          reader.onerror = function() { fail(new Error('קריאת הקובץ נכשלה.')); };
+          reader.onerror = function() { fail(new Error('קריאת הקובץ נכשלה.'), 'galleryOut'); };
           reader.readAsDataURL(file);
         });
 
@@ -476,16 +486,20 @@
     }
 
     function loadLeads() {
+      var out = document.getElementById('leadsOut');
+      if (out) out.innerHTML = '<div class="status-line">טוען פניות…</div>';
       google.script.run
         .withSuccessHandler(showLeads)
-        .withFailureHandler(fail)
+        .withFailureHandler(function(e) { fail(e, 'leadsOut'); })
         .getManagementData();
     }
 
     function loadGallery() {
+      var out = document.getElementById('galleryOut');
+      if (out) out.innerHTML = '<div class="status-line">טוען גלריה…</div>';
       google.script.run
         .withSuccessHandler(showGallery)
-        .withFailureHandler(fail)
+        .withFailureHandler(function(e) { fail(e, 'galleryOut'); })
         .getGalleryData();
     }
 
