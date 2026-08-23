@@ -21,8 +21,13 @@ const HEADERS = [
 ];
 
 function doGet(e) {
-  if (e && e.parameter && e.parameter.view === 'management') {
-    return HtmlService.createTemplateFromFile('Management').evaluate().setTitle('ניהול המערכת');
+  const view = e && e.parameter && e.parameter.view;
+  if (view === 'management') return HtmlService.createTemplateFromFile('Management').evaluate().setTitle('ניהול המערכת');
+  if (view === 'gallery') {
+    const json = JSON.stringify({ items: getPublicGallery() });
+    const callback = e.parameter.callback;
+    return ContentService.createTextOutput(callback ? callback + '(' + json + ');' : json)
+      .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
   }
   return HtmlService.createTemplateFromFile('Index').evaluate().setTitle('פנייה לטכנאי מחשבים').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
