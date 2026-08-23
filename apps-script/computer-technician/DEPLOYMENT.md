@@ -19,7 +19,7 @@ Copy these files **together** into the Google Apps Script project under `flowpag
 
 ## Live deployment URL
 
-`https://script.google.com/macros/s/AKfycbykp5QoR-nIBwEwCuNSziPz-waGd0ymqnbOsIJcgVAhgm5T-kGUce6xi9I2-OdqKrvNuQ/exec`
+`https://script.google.com/macros/s/AKfycbw_jJg-T4NOBNMfuwjvEYLgxjLCNLWsGKilc2l2BhDqUoQ-JQKuo9pF7iy7poxnvTW8wQ/exec`
 
 ## Where the gallery appears
 
