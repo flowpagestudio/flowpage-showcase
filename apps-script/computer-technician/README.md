@@ -2,22 +2,27 @@
 
 מקור Google Apps Script עבור תרחיש טכנאי מחשבים ב־FlowPage Studio.
 
-## קבצים
+חשבון מימוש יחיד: `flowpagestudio@gmail.com`
 
-- `Code.gs` — פנייה, Drive, Gmail ו־Calendar.
-- `Index.html` — Web App בעברית.
-- `appsscript.json` — הגדרות הפרויקט.
+## קבצים להעתקה יחד
 
-## חיבור לפרויקט Apps Script
+| קובץ במאגר | שם בקובץ ב־Apps Script |
+|---|---|
+| `Code.gs` | `Code.gs` |
+| `Index.html` | `Index` |
+| `Management.html` | `Management` |
+| `appsscript.json` | Manifest (`appsscript.json`) |
 
-1. פתח את פרויקט Apps Script העסקי.
-2. החלף את תוכן `Code.gs` בקובץ המקביל כאן.
-3. צור קובץ HTML בשם `Index` והדבק את `Index.html`.
-4. הגדר את Manifest דרך Project Settings → Show appsscript.json והדבק את הקובץ.
-5. שמור והריץ פעם אחת את `setupProject` — אשר את הרשאות Drive, Gmail ו־Calendar.
-6. Deploy → New deployment → Web app:
-   - Execute as: Me
-   - Who has access: Anyone
-7. העתק את כתובת ה־Web App לשדה המתאים בדף הטכנאי.
+ראה `DEPLOYMENT.md` להוראות פריסה, בדיקת קצה־לקצה, ו־clasp.
 
-הנתונים נשמרים בגיליון העסקי, והקבצים המצורפים נשמרים תחת תיקיית Drive ייעודית עבור כל פנייה.
+## מה המערכת עושה
+
+- קבלת פנייה ציבורית (`Index`) עם קבצים ל־Drive
+- שמירה בגיליון `פניות` + התראת Gmail לבעל העסק
+- ממשק ניהול (`?view=management`): סטטוסים + גלריה
+- פיד גלריה ציבורי (`?view=gallery`) ל־GitHub Pages
+
+## נכסי דמו
+
+תמונות בסיס לגלריה מגיעות מ־[flowpage-assets](https://github.com/flowpagestudio/flowpage-assets).  
+תמונות שהבעלים מעלה מהטלפון נשמרות ב־Drive של החשבון העסקי.

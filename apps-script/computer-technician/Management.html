@@ -1,3 +1,491 @@
-<!doctype html><html lang="he" dir="rtl"><head><base target="_top"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:Arial;background:#f7f7f1;color:#15251e}.hero{padding:58px 8%;background:linear-gradient(90deg,#f7f7f1eF,#f7f7f19C),url('https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/computer-technician/hero/hero-computer-technician-v1.png') center/cover}h1{font-size:48px;margin:0}em{color:#739100;font-style:normal}.desk{padding:42px 8%;background:#fff}.card{border:1px solid #d4ddd4;background:#f7f7f1;padding:18px;margin:12px 0}.id{color:#739100;font-weight:bold}.row{display:flex;justify-content:space-between;gap:15px}.desc{background:#fff;border-right:3px solid #d7f255;padding:10px;margin-top:12px}.error{color:#a22;padding:18px;background:#ffe8e3}@media(max-width:600px){.hero,.desk{padding:35px 22px}.row{display:block}}</style></head><body><section class="hero"><small>PRIVATE OWNER SPACE</small><h1>ניהול <em>המערכת.</em></h1><p>פניות נכנסות מהמערכת הפעילה.</p><p><b id="count">–</b> פניות חדשות</p></section><main class="desk"><h2>פניות פעילות</h2><div id="out">טוען פניות…</div><section class="desk"><h2>ניהול גלריה</h2><div id="gallery">טוען גלריה…</div></section></main><script>function e(v){return String(v||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}function show(data){var out=document.getElementById('out');document.getElementById('count').textContent=data.newCount;out.innerHTML='';if(!data.leads.length){out.textContent='אין פניות כרגע.';return}data.leads.forEach(function(l){var a=document.createElement('article');a.className='card';a.innerHTML='<div class="row"><div><span class="id">'+e(l.id)+'</span><h3>'+e(l.name)+' · '+e(l.issue)+'</h3><small>'+e(l.phone)+' · '+e(l.email)+'</small></div><select data-id="'+e(l.id)+'"><option>חדש</option><option>בטיפול</option><option>נקבע ביומן</option><option>הושלם</option><option>בוטל</option></select></div><div class="desc">'+e(l.description)+'</div>';var s=a.querySelector('select');s.value=l.status;s.onchange=function(){google.script.run.withSuccessHandler(load).withFailureHandler(fail).updateLeadStatus(l.id,s.value)};out.appendChild(a)})}function fail(x){document.getElementById('out').innerHTML='<div class="error">'+e(x.message||x)+'</div>'}function showGallery(items){var root=document.getElementById('gallery');root.innerHTML='';items.forEach(function(g){var a=document.createElement('article');a.className='card';a.innerHTML='<div class="row"><div><span class="id">'+e(g.slot)+'</span><h3>'+e(g.title)+'</h3></div><label>החלפת תמונה <input type="file" accept="image/jpeg,image/png" /></label></div><img src="'+e(g.url)+'" style="width:100%;max-height:220px;object-fit:cover;margin-top:12px">';var input=a.querySelector('input');input.onchange=function(){var file=input.files[0];if(!file)return;var r=new FileReader();r.onload=function(){google.script.run.withSuccessHandler(function(){loadGallery()}).withFailureHandler(fail).replaceGalleryImage(g.slot,{name:file.name,mimeType:file.type,base64:String(r.result).split(',')[1]})};r.readAsDataURL(file)};root.appendChild(a)})}
-function loadGallery(){google.script.run.withSuccessHandler(showGallery).withFailureHandler(fail).getGalleryData()}
-function load(){google.script.run.withSuccessHandler(show).withFailureHandler(fail).getManagementData();loadGallery()}load()</script></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ניהול המערכת | טכנאי מחשבים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #15251e;
+      --lime: #d7f255;
+      --paper: #f7f7f1;
+      --muted: #718078;
+      --line: #d4ddd4;
+      --accent: #739100;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Heebo, Arial, sans-serif;
+      min-height: 100vh;
+    }
+    .nav {
+      height: 76px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1180px;
+      margin: auto;
+      padding: 0 28px;
+      border-bottom: 1px solid #e1e6de;
+    }
+    .logo {
+      font: 700 23px/16px 'Space Grotesk', sans-serif;
+      letter-spacing: -1px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .logo span { color: #7b9d00; }
+    .logo small {
+      display: block;
+      font: 700 9px/11px 'Space Grotesk', sans-serif;
+      letter-spacing: 3px;
+    }
+    .nav-meta {
+      font-size: 13px;
+      font-weight: 700;
+      color: #607167;
+    }
+    .hero {
+      padding: 68px max(28px, calc((100vw - 1124px) / 2)) 48px;
+      background:
+        radial-gradient(circle at 12% 17%, #e8f7b9 0, transparent 25%),
+        var(--paper);
+    }
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #607167;
+      margin: 0 0 18px;
+    }
+    .kicker i {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 72px);
+      letter-spacing: -2.5px;
+      line-height: .98;
+      margin: 0;
+    }
+    .hero em { font-style: normal; color: var(--accent); }
+    .hero p {
+      max-width: 520px;
+      font-size: 18px;
+      line-height: 1.6;
+      color: #5e6e66;
+      margin: 20px 0 0;
+    }
+    .stats {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+    .stat {
+      background: white;
+      border: 1px solid var(--line);
+      padding: 12px 15px;
+      min-width: 120px;
+    }
+    .stat b, .stat span { display: block; }
+    .stat b { font-size: 25px; line-height: 1; color: var(--accent); }
+    .stat span { font-size: 13px; color: #64736b; margin-top: 4px; }
+    .desk {
+      padding: 52px max(28px, calc((100vw - 1124px) / 2)) 80px;
+      background: white;
+    }
+    .desk-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+    .desk-head h2 { font-size: 30px; margin: 0; }
+    .desk-head p { margin: 0; color: var(--muted); }
+    .eyebrow {
+      font: 700 12px 'Space Grotesk', sans-serif;
+      letter-spacing: 2px;
+      color: #6e8500;
+      margin: 0 0 10px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      margin-bottom: 28px;
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 21px;
+      border-bottom: 1px solid var(--line);
+      background: white;
+    }
+    .panel-head h3 { font-size: 19px; margin: 0; }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #557100;
+      background: #e8f7b9;
+      padding: 5px 8px;
+    }
+    .lead {
+      padding: 18px 21px;
+      border-bottom: 1px solid #dce3dc;
+    }
+    .lead:last-child { border-bottom: 0; }
+    .lead-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: start;
+    }
+    .lead .id {
+      font: 700 13px 'Space Grotesk', sans-serif;
+      color: #779400;
+    }
+    .lead h4 {
+      margin: 6px 0 4px;
+      font-size: 18px;
+    }
+    .lead small {
+      color: var(--muted);
+      display: block;
+      line-height: 1.5;
+    }
+    .lead select {
+      font: 700 14px Heebo, Arial, sans-serif;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      padding: 8px 10px;
+      min-width: 130px;
+    }
+    .desc {
+      margin-top: 12px;
+      background: white;
+      border-right: 3px solid var(--lime);
+      padding: 12px 14px;
+      line-height: 1.55;
+      color: #45554d;
+    }
+    .files {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .files a {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      text-decoration: none;
+      border-bottom: 2px solid #779400;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--line);
+    }
+    .gallery-card {
+      background: var(--paper);
+      padding: 16px;
+    }
+    .gallery-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+      background: #e8ece5;
+    }
+    .gallery-card h4 {
+      margin: 12px 0 4px;
+      font-size: 16px;
+    }
+    .gallery-card .slot {
+      font: 700 12px 'Space Grotesk', sans-serif;
+      color: #779400;
+    }
+    .gallery-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .gallery-actions label,
+    .gallery-actions .toggle {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .gallery-actions input[type="file"] {
+      display: block;
+      margin-top: 6px;
+      width: 100%;
+      font: 13px Heebo, Arial, sans-serif;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .empty, .status-line {
+      padding: 22px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .error {
+      margin: 12px 21px 18px;
+      padding: 14px 16px;
+      background: #ffe8e3;
+      border-right: 4px solid #b54d36;
+      color: #6d2a1c;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    footer {
+      background: var(--ink);
+      color: #9baaa1;
+      text-align: center;
+      padding: 22px;
+      font: 11px 'Space Grotesk', sans-serif;
+      letter-spacing: 2px;
+    }
+    @media (max-width: 700px) {
+      .nav { height: 68px; padding: 0 20px; }
+      .hero { padding: 52px 22px 40px; }
+      .desk { padding: 42px 22px 60px; }
+      .desk-head { display: block; }
+      .desk-head p { margin-top: 8px; }
+      .lead-top { grid-template-columns: 1fr; }
+      .lead select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="logo">FLOW<span>PAGE</span><small>STUDIO</small></div>
+    <div class="nav-meta">מרחב בעל העסק</div>
+  </nav>
+
+  <section class="hero">
+    <p class="kicker"><i></i> PRIVATE OWNER SPACE</p>
+    <h1>ניהול <em>המערכת.</em></h1>
+    <p>כל פנייה נכנסת לכאן כשהיא כבר מסודרת. מעדכנים סטטוס, מחליפים תמונות גלריה, והאתר הציבורי מתעדכן בלי לגעת בקוד.</p>
+    <div class="stats">
+      <div class="stat"><b id="statNew">–</b><span>פניות חדשות</span></div>
+      <div class="stat"><b id="statActive">–</b><span>בטיפול פעיל</span></div>
+      <div class="stat"><b id="statTotal">–</b><span>סה״כ פניות</span></div>
+    </div>
+  </section>
+
+  <main class="desk">
+    <div class="desk-head">
+      <div>
+        <p class="eyebrow">תצוגת עבודה</p>
+        <h2>פניות שדורשות טיפול</h2>
+      </div>
+      <p>הכול מגיע ממקור אחד.</p>
+    </div>
+
+    <section class="panel">
+      <header class="panel-head">
+        <h3>פניות פעילות</h3>
+        <span class="badge">גישה מורשית בלבד</span>
+      </header>
+      <div id="leadsOut"><div class="status-line">טוען פניות…</div></div>
+    </section>
+
+    <div class="desk-head">
+      <div>
+        <p class="eyebrow">נכסים ציבוריים</p>
+        <h2>ניהול גלריה</h2>
+      </div>
+      <p>חמישה מקומות מנוהלים מהטלפון.</p>
+    </div>
+
+    <section class="panel">
+      <header class="panel-head">
+        <h3>תמונות באתר הציבורי</h3>
+        <span class="badge">עדכון חי</span>
+      </header>
+      <div id="galleryOut"><div class="status-line">טוען גלריה…</div></div>
+    </section>
+  </main>
+
+  <footer>PRIVATE MANAGEMENT · FLOWPAGE STUDIO · 2026</footer>
+
+  <script>
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+      });
+    }
+
+    function fail(err) {
+      var msg = (err && err.message) ? err.message : String(err || 'שגיאה לא ידועה');
+      var box = document.createElement('div');
+      box.className = 'error';
+      box.textContent = msg;
+      var leads = document.getElementById('leadsOut');
+      if (leads && !leads.querySelector('.error')) leads.prepend(box.cloneNode(true));
+      var gallery = document.getElementById('galleryOut');
+      if (gallery && !gallery.querySelector('.error')) gallery.prepend(box);
+    }
+
+    function showLeads(data) {
+      document.getElementById('statNew').textContent = data.newCount;
+      document.getElementById('statActive').textContent = data.activeCount;
+      document.getElementById('statTotal').textContent = data.leads.length;
+
+      var out = document.getElementById('leadsOut');
+      out.innerHTML = '';
+      if (!data.leads.length) {
+        out.innerHTML = '<div class="empty">אין פניות כרגע.</div>';
+        return;
+      }
+
+      data.leads.forEach(function(lead) {
+        var article = document.createElement('article');
+        article.className = 'lead';
+
+        var options = (data.statuses || ['חדש', 'בטיפול', 'נקבע ביומן', 'הושלם', 'בוטל'])
+          .map(function(s) {
+            return '<option value="' + esc(s) + '"' + (s === lead.status ? ' selected' : '') + '>' + esc(s) + '</option>';
+          })
+          .join('');
+
+        var files = (lead.files || []).map(function(url, i) {
+          return '<a href="' + esc(url) + '" target="_blank" rel="noopener">קובץ ' + (i + 1) + '</a>';
+        }).join('');
+
+        article.innerHTML =
+          '<div class="lead-top">' +
+            '<div>' +
+              '<span class="id">' + esc(lead.id) + '</span>' +
+              '<h4>' + esc(lead.name) + ' · ' + esc(lead.issue) + '</h4>' +
+              '<small>' + esc(lead.phone) + ' · ' + esc(lead.email) +
+                (lead.serviceType ? ' · ' + esc(lead.serviceType) : '') +
+              '</small>' +
+            '</div>' +
+            '<select aria-label="סטטוס פנייה">' + options + '</select>' +
+          '</div>' +
+          '<div class="desc">' + esc(lead.description) + '</div>' +
+          (files ? '<div class="files">' + files + '</div>' : '');
+
+        var select = article.querySelector('select');
+        select.addEventListener('change', function() {
+          select.disabled = true;
+          google.script.run
+            .withSuccessHandler(function() { loadLeads(); })
+            .withFailureHandler(function(e) { select.disabled = false; fail(e); })
+            .updateLeadStatus(lead.id, select.value);
+        });
+
+        out.appendChild(article);
+      });
+    }
+
+    function showGallery(items) {
+      var out = document.getElementById('galleryOut');
+      out.innerHTML = '';
+      if (!items || !items.length) {
+        out.innerHTML = '<div class="empty">אין רשומות גלריה. הריצו setupProject().</div>';
+        return;
+      }
+
+      var grid = document.createElement('div');
+      grid.className = 'gallery-grid';
+
+      items.forEach(function(item) {
+        var card = document.createElement('article');
+        card.className = 'gallery-card';
+        var active = item.active === true || item.active === 'כן' || item.active === 'YES';
+
+        card.innerHTML =
+          '<span class="slot">' + esc(item.slot) + '</span>' +
+          '<img src="' + esc(item.url) + '" alt="' + esc(item.title || item.slot) + '">' +
+          '<h4>' + esc(item.title || 'ללא כותרת') + '</h4>' +
+          '<small>' + esc(item.description || '') + '</small>' +
+          '<div class="gallery-actions">' +
+            '<label class="toggle"><input type="checkbox"' + (active ? ' checked' : '') + '> מוצג באתר</label>' +
+            '<label>החלפת תמונה<input type="file" accept="image/jpeg,image/png,image/webp"></label>' +
+          '</div>';
+
+        var toggle = card.querySelector('input[type="checkbox"]');
+        toggle.addEventListener('change', function() {
+          toggle.disabled = true;
+          google.script.run
+            .withSuccessHandler(function() { loadGallery(); })
+            .withFailureHandler(function(e) { toggle.disabled = false; fail(e); })
+            .setGalleryActive(item.slot, toggle.checked);
+        });
+
+        var fileInput = card.querySelector('input[type="file"]');
+        fileInput.addEventListener('change', function() {
+          var file = fileInput.files[0];
+          if (!file) return;
+          if (file.size > 8 * 1024 * 1024) {
+            fail(new Error('כל קובץ מוגבל ל־8MB.'));
+            fileInput.value = '';
+            return;
+          }
+          var reader = new FileReader();
+          reader.onload = function() {
+            google.script.run
+              .withSuccessHandler(function() { loadGallery(); })
+              .withFailureHandler(fail)
+              .replaceGalleryImage(item.slot, {
+                name: file.name,
+                mimeType: file.type,
+                size: file.size,
+                base64: String(reader.result).split(',')[1]
+              });
+          };
+          reader.onerror = function() { fail(new Error('קריאת הקובץ נכשלה.')); };
+          reader.readAsDataURL(file);
+        });
+
+        grid.appendChild(card);
+      });
+
+      out.appendChild(grid);
+    }
+
+    function loadLeads() {
+      google.script.run
+        .withSuccessHandler(showLeads)
+        .withFailureHandler(fail)
+        .getManagementData();
+    }
+
+    function loadGallery() {
+      google.script.run
+        .withSuccessHandler(showGallery)
+        .withFailureHandler(fail)
+        .getGalleryData();
+    }
+
+    function boot() {
+      loadLeads();
+      loadGallery();
+    }
+
+    boot();
+  </script>
+</body>
+</html>
