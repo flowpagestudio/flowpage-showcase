@@ -128,20 +128,38 @@
       var grid = document.querySelector('.technician-gallery-grid');
       if (!grid) return;
 
-      items.forEach(function(item) {
-        var n = String(item.slot || '').replace('gallery-', '');
-        var figure = grid.querySelector('figure:nth-child(' + n + ')');
-        if (!figure) return;
-        var img = figure.querySelector('img');
-        var caption = figure.querySelector('figcaption');
-        if (img && item.url) {
-          img.src = item.url;
-          img.alt = item.description || item.title || '';
-        }
-        if (caption && item.title) caption.textContent = item.title;
+      // Rebuild from active slots only — do not leave hardcoded placeholders
+      // for images turned off in management ("מוצג באתר").
+      items = items.slice().sort(function(a, b) {
+        var na = parseInt(String(a.slot || '').replace('gallery-', ''), 10) || 0;
+        var nb = parseInt(String(b.slot || '').replace('gallery-', ''), 10) || 0;
+        return na - nb;
       });
 
-      grid.setAttribute('data-gallery-loaded', items.length ? 'true' : 'false');
+      grid.innerHTML = '';
+      if (!items.length) {
+        grid.setAttribute('data-gallery-loaded', 'empty');
+        var empty = document.createElement('p');
+        empty.className = 'note';
+        empty.textContent = 'אין תמונות פעילות בגלריה כרגע.';
+        grid.appendChild(empty);
+        return;
+      }
+
+      items.forEach(function(item, index) {
+        var figure = document.createElement('figure');
+        if (index === 0) figure.className = 'gallery-large';
+        var img = document.createElement('img');
+        img.src = item.url || '';
+        img.alt = item.description || item.title || '';
+        var caption = document.createElement('figcaption');
+        caption.textContent = item.title || '';
+        figure.appendChild(img);
+        figure.appendChild(caption);
+        grid.appendChild(figure);
+      });
+
+      grid.setAttribute('data-gallery-loaded', 'true');
     }
 
     var galleryScript = document.createElement('script');
