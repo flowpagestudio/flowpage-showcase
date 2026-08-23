@@ -81,10 +81,20 @@ function doGet(e) {
   const view = (e && e.parameter && e.parameter.view) || '';
 
   if (view === 'management') {
-    return HtmlService.createTemplateFromFile('Management')
-      .evaluate()
-      .setTitle('ניהול המערכת')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    try {
+      return HtmlService.createHtmlOutputFromFile('Management')
+        .setTitle('ניהול המערכת')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    } catch (err) {
+      return HtmlService.createHtmlOutput(
+        '<!doctype html><meta charset="utf-8"><body dir="rtl" style="font-family:Arial;padding:40px">' +
+        '<h1>קובץ Management חסר בפרויקט</h1>' +
+        '<p>ב־Apps Script צריך קובץ HTML בשם בדיוק <b>Management</b> (הדביקו את Management.html מהמאגר).</p>' +
+        '<p>לאחר מכן Save → Deploy → New version.</p>' +
+        '<pre>' + String(err && err.message ? err.message : err) + '</pre>' +
+        '</body>'
+      ).setTitle('שגיאת ניהול');
+    }
   }
 
   if (view === 'gallery') {
@@ -115,10 +125,19 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  return HtmlService.createTemplateFromFile('Index')
-    .evaluate()
-    .setTitle('פנייה לטכנאי מחשבים')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  try {
+    return HtmlService.createHtmlOutputFromFile('Index')
+      .setTitle('פנייה לטכנאי מחשבים')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (err) {
+    return HtmlService.createHtmlOutput(
+      '<!doctype html><meta charset="utf-8"><body dir="rtl" style="font-family:Arial;padding:40px">' +
+      '<h1>קובץ Index חסר בפרויקט</h1>' +
+      '<p>הדביקו את Index.html מהמאגר לקובץ HTML בשם <b>Index</b>, שמרו ופרסמו גרסה חדשה.</p>' +
+      '<pre>' + String(err && err.message ? err.message : err) + '</pre>' +
+      '</body>'
+    ).setTitle('שגיאת טופס');
+  }
 }
 
 /**
