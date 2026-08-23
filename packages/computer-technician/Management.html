@@ -348,18 +348,27 @@
     }
 
     function showLeads(data) {
-      document.getElementById('statNew').textContent = data.newCount;
-      document.getElementById('statActive').textContent = data.activeCount;
-      document.getElementById('statTotal').textContent = data.leads.length;
-
       var out = document.getElementById('leadsOut');
+      if (!data || typeof data !== 'object') {
+        fail(new Error('לא התקבלו נתוני פניות מהשרת. שמרו את Code.gs ופרסמו New version.'));
+        return;
+      }
+
+      var leads = Array.isArray(data.leads) ? data.leads : [];
+      var statNew = document.getElementById('statNew');
+      var statActive = document.getElementById('statActive');
+      var statTotal = document.getElementById('statTotal');
+      if (statNew) statNew.textContent = data.newCount != null ? data.newCount : 0;
+      if (statActive) statActive.textContent = data.activeCount != null ? data.activeCount : 0;
+      if (statTotal) statTotal.textContent = leads.length;
+
       out.innerHTML = '';
-      if (!data.leads.length) {
+      if (!leads.length) {
         out.innerHTML = '<div class="empty">אין פניות כרגע.</div>';
         return;
       }
 
-      data.leads.forEach(function(lead) {
+      leads.forEach(function(lead) {
         var article = document.createElement('article');
         article.className = 'lead';
 

@@ -191,8 +191,11 @@ function submitLead(payload) {
 
 function getManagementData() {
   assertOwner_();
-  const rows = getSheet_().getDataRange().getValues();
-  const heads = rows.shift() || HEADERS;
+  const sheet = getSheet_();
+  const range = sheet.getDataRange();
+  const values = range.getNumRows() ? range.getValues() : [HEADERS];
+  const rows = values.slice();
+  const heads = (rows.shift() || HEADERS).map(function(h) { return String(h || ''); });
   const leads = rows
     .filter(function(r) { return r[0]; })
     .map(function(r, i) {
@@ -200,33 +203,34 @@ function getManagementData() {
       heads.forEach(function(h, j) { x[h] = r[j]; });
       return {
         row: i + 2,
-        id: x['מזהה פנייה'],
-        name: x['שם מלא'],
-        phone: x['טלפון'],
-        email: x['אימייל'],
-        issue: x['סוג תקלה'],
-        device: x['מותג / דגם'] || '',
-        description: x['תיאור התקלה'],
-        address: x['כתובת'] || '',
-        serviceType: x['סוג שירות'] || '',
-        preferredDateTime: x['מועד מועדף'] || '',
-        status: x['סטטוס'] || 'חדש',
-        eventId: x['מזהה אירוע ביומן'] || '',
+        id: String(x['מזהה פנייה'] || ''),
+        name: String(x['שם מלא'] || ''),
+        phone: String(x['טלפון'] || ''),
+        email: String(x['אימייל'] || ''),
+        issue: String(x['סוג תקלה'] || ''),
+        device: String(x['מותג / דגם'] || ''),
+        description: String(x['תיאור התקלה'] || ''),
+        address: String(x['כתובת'] || ''),
+        serviceType: String(x['סוג שירות'] || ''),
+        preferredDateTime: stringifyCell_(x['מועד מועדף']),
+        status: String(x['סטטוס'] || 'חדש'),
+        eventId: String(x['מזהה אירוע ביומן'] || ''),
         files: String(x['קבצים מצורפים'] || '').split('\n').filter(Boolean),
-        updatedAt: x['עדכון אחרון'] || ''
+        updatedAt: stringifyCell_(x['עדכון אחרון'])
       };
     })
     .reverse();
 
-  return {
+  // Plain JSON-safe payload — avoids google.script.run handing null to the UI.
+  return JSON.parse(JSON.stringify({
     ok: true,
     leads: leads,
     newCount: leads.filter(function(x) { return x.status === 'חדש'; }).length,
     activeCount: leads.filter(function(x) {
       return x.status === 'חדש' || x.status === 'בטיפול' || x.status === 'נקבע ביומן';
     }).length,
-    statuses: LEAD_STATUSES
-  };
+    statuses: LEAD_STATUSES.slice()
+  }));
 }
 
 function updateLeadStatus(id, status) {
@@ -567,6 +571,14 @@ function notifyCustomer_(leadId, p, event) {
 
 function sanitizeFileName_(name) {
   return String(name || 'attachment').replace(/[\\/:*?"<>|]/g, '_');
+}
+
+function stringifyCell_(value) {
+  if (value == null || value === '') return '';
+  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm');
+  }
+  return String(value);
 }
 
 function sanitizeCallback_(name) {
