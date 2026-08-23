@@ -25,7 +25,10 @@ Do **not** paste `COPY-TO-APPS-SCRIPT.md`, `Gallery.md`, or `.clasp.json.example
 
 ## Live deployment URL
 
-`https://script.google.com/macros/s/AKfycby6DoJw77VKdUbhk2rJxlun5EBCYshrt3U6anwGuh1bd65Gallj0CIDKnt1V9E3ZqDHtA/exec`
+`https://script.google.com/macros/s/AKfycbzDMi2ezWZu4TzOCfOZBWvW-G3FRQr9QESSAdPV5BrT3cDrPvuts7_wKH5eW3mIwJ1ng/exec`
+
+Important: when updating code, use **Deploy → Manage deployments → Edit (pencil) → New version**.  
+Creating a brand-new Web App deployment changes the `/exec` URL and breaks the Pages links until you update them again.
 
 ## One Web App URL — all views
 
