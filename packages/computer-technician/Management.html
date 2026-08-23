@@ -365,12 +365,24 @@
       }
 
       var leads = Array.isArray(data.leads) ? data.leads : [];
+      var newCount = leads.filter(function(l) { return l.status === 'חדש'; }).length;
+      var activeCount = leads.filter(function(l) {
+        return l.status === 'חדש' || l.status === 'בטיפול' || l.status === 'נקבע ביומן';
+      }).length;
+      if (data.newCount != null) newCount = Number(data.newCount) || newCount;
+      if (data.activeCount != null) activeCount = Number(data.activeCount) || activeCount;
+
+      // Prefer class nodes — more reliable than ids inside HtmlService iframes.
+      var statNodes = document.querySelectorAll('.stats .stat b');
+      if (statNodes[0]) statNodes[0].textContent = String(newCount);
+      if (statNodes[1]) statNodes[1].textContent = String(activeCount);
+      if (statNodes[2]) statNodes[2].textContent = String(leads.length);
       var statNew = document.getElementById('statNew');
       var statActive = document.getElementById('statActive');
       var statTotal = document.getElementById('statTotal');
-      if (statNew) statNew.textContent = data.newCount != null ? data.newCount : 0;
-      if (statActive) statActive.textContent = data.activeCount != null ? data.activeCount : 0;
-      if (statTotal) statTotal.textContent = leads.length;
+      if (statNew) statNew.textContent = String(newCount);
+      if (statActive) statActive.textContent = String(activeCount);
+      if (statTotal) statTotal.textContent = String(leads.length);
 
       out.innerHTML = '';
       if (!leads.length) {
