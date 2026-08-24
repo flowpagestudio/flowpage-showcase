@@ -54,7 +54,7 @@ function getAppData() {
   return {
     dashboard: { openOrders: orders.length, production: batches.filter(b => b.status === 'בייצור').length,
       packing: orders.filter(o => o.status === 'מוכנה לאריזה').length, counts },
-    products: products_(), ingredients: ingredients_(), customers: customers_(), orders: getOrders_(), plans: rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).reverse(), recipeMedia: recipeMedia_()
+    products: products_(), ingredients: ingredients_(), customers: customers_(), orders: getOrders_(), plans: rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).reverse(), recipeMedia: recipeMedia_(), recipeIngredients: recipeIngredients_()
   };
 }
 
@@ -67,7 +67,7 @@ function saveOrder(payload) {
   const id = 'ORD-' + Utilities.getUuid().slice(0, 8).toUpperCase();
   append_(ss, BF.SHEETS.ORDERS, [id, new Date(), clean_(customer), clean_(phone), payload.deliveryDate, 'ממתינה', clean_(payload.notes)]);
   payload.lines.filter(l => l.productId && Number(l.quantity) > 0).forEach(l => append_(ss, BF.SHEETS.ORDER_LINES, [id, l.productId, Number(l.quantity), clean_(l.packingNote)]));
-  return {ok:true, id};
+  return {ok:true, id, message: 'ההזמנה נשמרה בהצלחה'};
 }
 
 function saveCustomer(payload) {
@@ -99,6 +99,13 @@ function saveRecipeStep(payload) {
   if (!payload || !payload.productId || !clean_(payload.title)) throw new Error('יש לבחור מוצר ולהזין שלב עבודה.');
   const existing = rows_(ss, BF.SHEETS.STEPS).filter(r => r[0] === payload.productId);
   append_(ss, BF.SHEETS.STEPS, [payload.productId, Number(payload.order || existing.length + 1), clean_(payload.title), Number(payload.minutes || 0), clean_(payload.note)]);
+  return {ok:true};
+}
+
+function saveRecipeIngredient(payload) {
+  const ss = getSpreadsheet_(); assertSetup_(ss);
+  if (!payload || !payload.productId || !payload.ingredientId || Number(payload.quantity) <= 0) throw new Error('יש לבחור מוצר, חומר גלם וכמות תקינה.');
+  append_(ss, BF.SHEETS.RECIPES, [payload.productId, payload.ingredientId, Number(payload.quantity)]);
   return {ok:true};
 }
 
@@ -173,6 +180,7 @@ function customers_() { return rows_(getSpreadsheet_(), BF.SHEETS.CUSTOMERS).fil
 function products_() { return rows_(getSpreadsheet_(), BF.SHEETS.PRODUCTS).filter(r => String(r[5]).toLowerCase() !== 'לא').map(r => ({id:r[0],name:r[1],unit:r[2],targetCost:Number(r[3]),minutes:Number(r[4]),salePrice:Number(r[6]),category:r[7] || ''})); }
 function ingredients_() { return rows_(getSpreadsheet_(), BF.SHEETS.INGREDIENTS).map(r => ({id:r[0],name:r[1],unit:r[2],cost:Number(r[3]),supplier:r[4]})); }
 function recipeMedia_() { return rows_(getSpreadsheet_(), BF.SHEETS.RECIPE_MEDIA).map(r => ({id:r[0],productId:r[1],title:r[2],url:r[3],note:r[4],created:formatDate_(r[5])})); }
+function recipeIngredients_() { const ingredients=indexBy_(ingredients_(), 'id'); return rows_(getSpreadsheet_(), BF.SHEETS.RECIPES).map(r => ({productId:r[0],ingredientId:r[1],name:ingredients[r[1]]?.name || r[1],unit:ingredients[r[1]]?.unit || '',quantity:Number(r[2]),unitCost:Number(ingredients[r[1]]?.cost || 0),cost:Number(r[2]) * Number(ingredients[r[1]]?.cost || 0)})); }
 function ensureSheet_(ss,name,headers) { const sh = ss.getSheetByName(name) || ss.insertSheet(name); if (sh.getLastRow() === 0) { sh.appendRow(headers); sh.setFrozenRows(1); sh.getRange(1,1,1,headers.length).setBackground('#4a2c21').setFontColor('#ffffff').setFontWeight('bold'); sh.autoResizeColumns(1,headers.length); } else { const current=sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0]; headers.slice(current.length).forEach((header,index)=>sh.getRange(1,current.length+index+1).setValue(header)); } }
 function seedDemoData_(ss) {
   if (rows_(ss, BF.SHEETS.PRODUCTS).length) return;
