@@ -12,8 +12,23 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+/** Returns the spreadsheet that stores BakeFlow data in both bound and standalone projects. */
+function getSpreadsheet_() {
+  const props = PropertiesService.getScriptProperties();
+  const storedId = props.getProperty('BAKEFLOW_SPREADSHEET_ID');
+  if (storedId) return SpreadsheetApp.openById(storedId);
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) {
+    props.setProperty('BAKEFLOW_SPREADSHEET_ID', active.getId());
+    return active;
+  }
+  const created = SpreadsheetApp.create('BakeFlow - ניהול ייצור');
+  props.setProperty('BAKEFLOW_SPREADSHEET_ID', created.getId());
+  return created;
+}
+
 function setupBakeFlow() {
-  const ss = SpreadsheetApp.getActive();
+  const ss = getSpreadsheet_();
   const schemas = {};
   schemas[BF.SHEETS.CUSTOMERS] = ['מזהה לקוח','שם לקוח','טלפון','אימייל','כתובת','הערות','פעיל'];
   schemas[BF.SHEETS.PRODUCTS] = ['מזהה מוצר','שם מוצר','יחידת ייצור','עלות יעד ליחידה','זמן הכנה בדקות','פעיל','מחיר מכירה','קטגוריה'];
@@ -27,11 +42,11 @@ function setupBakeFlow() {
   schemas[BF.SHEETS.BATCHES] = ['מזהה אצווה','מזהה תוכנית','מזהה מוצר','כמות מתוכננת','סטטוס'];
   Object.keys(schemas).forEach(name => ensureSheet_(ss, name, schemas[name]));
   seedDemoData_(ss);
-  return {ok: true, message: 'BakeFlow הוקמה בהצלחה. נתוני הדגמה נוספו לגיליונות.'};
+  return {ok: true, message: 'BakeFlow הוקמה בהצלחה. נתוני הדגמה נוספו לגיליונות.', spreadsheetUrl: ss.getUrl()};
 }
 
 function getAppData() {
-  const ss = SpreadsheetApp.getActive();
+  const ss = getSpreadsheet_();
   assertSetup_(ss);
   const orders = getOrders_().filter(o => o.status !== 'נמסרה');
   const batches = rows_(ss, BF.SHEETS.BATCHES).map(rowToBatch_);
@@ -44,7 +59,7 @@ function getAppData() {
 }
 
 function saveOrder(payload) {
-  const ss = SpreadsheetApp.getActive(); assertSetup_(ss);
+  const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!payload || !payload.customer || !payload.deliveryDate || !payload.lines || !payload.lines.length) throw new Error('יש למלא לקוח, תאריך מסירה ולפחות פריט אחד.');
   let customer = payload.customer;
   let phone = payload.phone;
@@ -56,7 +71,7 @@ function saveOrder(payload) {
 }
 
 function saveCustomer(payload) {
-  const ss = SpreadsheetApp.getActive(); assertSetup_(ss);
+  const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!payload || !clean_(payload.name)) throw new Error('יש להזין שם לקוח.');
   const id = 'CUS-' + Utilities.getUuid().slice(0, 8).toUpperCase();
   append_(ss, BF.SHEETS.CUSTOMERS, [id, clean_(payload.name), clean_(payload.phone), clean_(payload.email), clean_(payload.address), clean_(payload.notes), 'כן']);
@@ -64,7 +79,7 @@ function saveCustomer(payload) {
 }
 
 function saveProduct(payload) {
-  const ss = SpreadsheetApp.getActive(); assertSetup_(ss);
+  const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!payload || !clean_(payload.name) || !clean_(payload.unit)) throw new Error('יש להזין שם מוצר ויחידת ייצור.');
   const id = 'P-' + Utilities.getUuid().slice(0, 8).toUpperCase();
   append_(ss, BF.SHEETS.PRODUCTS, [id, clean_(payload.name), clean_(payload.unit), Number(payload.targetCost || 0), Number(payload.minutes || 0), 'כן', Number(payload.salePrice || 0), clean_(payload.category)]);
@@ -72,7 +87,7 @@ function saveProduct(payload) {
 }
 
 function saveIngredient(payload) {
-  const ss = SpreadsheetApp.getActive(); assertSetup_(ss);
+  const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!payload || !clean_(payload.name) || !clean_(payload.unit)) throw new Error('יש להזין שם חומר גלם ויחידת מידה.');
   const id = 'I-' + Utilities.getUuid().slice(0, 8).toUpperCase();
   append_(ss, BF.SHEETS.INGREDIENTS, [id, clean_(payload.name), clean_(payload.unit), Number(payload.cost || 0), clean_(payload.supplier)]);
@@ -80,7 +95,7 @@ function saveIngredient(payload) {
 }
 
 function saveRecipeStep(payload) {
-  const ss = SpreadsheetApp.getActive(); assertSetup_(ss);
+  const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!payload || !payload.productId || !clean_(payload.title)) throw new Error('יש לבחור מוצר ולהזין שלב עבודה.');
   const existing = rows_(ss, BF.SHEETS.STEPS).filter(r => r[0] === payload.productId);
   append_(ss, BF.SHEETS.STEPS, [payload.productId, Number(payload.order || existing.length + 1), clean_(payload.title), Number(payload.minutes || 0), clean_(payload.note)]);
@@ -88,7 +103,7 @@ function saveRecipeStep(payload) {
 }
 
 function uploadRecipeImage(payload) {
-  const ss = SpreadsheetApp.getActive(); assertSetup_(ss);
+  const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!payload || !payload.productId || !payload.base64 || !payload.fileName) throw new Error('יש לבחור מוצר וקובץ תמונה.');
   const folders = DriveApp.getFoldersByName('BakeFlow - מתכונים');
   const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder('BakeFlow - מתכונים');
@@ -99,7 +114,7 @@ function uploadRecipeImage(payload) {
 }
 
 function createProductionPlan(fromDate, toDate) {
-  const ss = SpreadsheetApp.getActive(); assertSetup_(ss);
+  const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!fromDate || !toDate) throw new Error('יש לבחור טווח תאריכים לתוכנית.');
   const start = new Date(fromDate); const end = endOfDay_(new Date(toDate));
   if (start > end) throw new Error('תאריך ההתחלה חייב להיות לפני תאריך הסיום.');
@@ -115,7 +130,7 @@ function createProductionPlan(fromDate, toDate) {
 }
 
 function getPlanDetails(planId) {
-  const ss = SpreadsheetApp.getActive(); assertSetup_(ss);
+  const ss = getSpreadsheet_(); assertSetup_(ss);
   const plan = rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).find(p => p.id === planId) || rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).slice(-1)[0];
   if (!plan) return null;
   const products = indexBy_(products_(), 'id');
@@ -138,7 +153,7 @@ function getPlanDetails(planId) {
 
 function setBatchStatus(batchId, status) {
   if (!['מתוכננת','בייצור','מוכנה'].includes(status)) throw new Error('סטטוס אצווה לא תקין.');
-  const ss = SpreadsheetApp.getActive(); const sh = ss.getSheetByName(BF.SHEETS.BATCHES); const values = sh.getDataRange().getValues();
+  const ss = getSpreadsheet_(); const sh = ss.getSheetByName(BF.SHEETS.BATCHES); const values = sh.getDataRange().getValues();
   const row = values.findIndex((r,i) => i && r[0] === batchId); if (row < 1) throw new Error('האצווה לא נמצאה.');
   sh.getRange(row + 1, 5).setValue(status);
   return {ok:true};
@@ -146,18 +161,18 @@ function setBatchStatus(batchId, status) {
 
 function setOrderStatus(orderId, status) {
   if (!BF.STATUS.includes(status)) throw new Error('סטטוס הזמנה לא תקין.');
-  const ss = SpreadsheetApp.getActive(); updateOrderStatus_(ss, orderId, status); return {ok:true};
+  const ss = getSpreadsheet_(); updateOrderStatus_(ss, orderId, status); return {ok:true};
 }
 
 function getOrders_() {
-  const ss = SpreadsheetApp.getActive(); const lines = rows_(ss, BF.SHEETS.ORDER_LINES); const products = indexBy_(products_(), 'id');
+  const ss = getSpreadsheet_(); const lines = rows_(ss, BF.SHEETS.ORDER_LINES); const products = indexBy_(products_(), 'id');
   return rows_(ss, BF.SHEETS.ORDERS).map(r => ({id:r[0], created:r[1], customer:r[2], phone:r[3], deliveryDate:formatDate_(r[4]), status:r[5], notes:r[6],
     lines: lines.filter(l => l[0] === r[0]).map(l => ({productId:l[1], productName:products[l[1]]?.name || l[1], quantity:Number(l[2]), packingNote:l[3] || ''}))})).reverse();
 }
-function customers_() { return rows_(SpreadsheetApp.getActive(), BF.SHEETS.CUSTOMERS).filter(r => String(r[6]).toLowerCase() !== 'לא').map(r => ({id:r[0],name:r[1],phone:r[2],email:r[3],address:r[4],notes:r[5]})); }
-function products_() { return rows_(SpreadsheetApp.getActive(), BF.SHEETS.PRODUCTS).filter(r => String(r[5]).toLowerCase() !== 'לא').map(r => ({id:r[0],name:r[1],unit:r[2],targetCost:Number(r[3]),minutes:Number(r[4]),salePrice:Number(r[6]),category:r[7] || ''})); }
-function ingredients_() { return rows_(SpreadsheetApp.getActive(), BF.SHEETS.INGREDIENTS).map(r => ({id:r[0],name:r[1],unit:r[2],cost:Number(r[3]),supplier:r[4]})); }
-function recipeMedia_() { return rows_(SpreadsheetApp.getActive(), BF.SHEETS.RECIPE_MEDIA).map(r => ({id:r[0],productId:r[1],title:r[2],url:r[3],note:r[4],created:formatDate_(r[5])})); }
+function customers_() { return rows_(getSpreadsheet_(), BF.SHEETS.CUSTOMERS).filter(r => String(r[6]).toLowerCase() !== 'לא').map(r => ({id:r[0],name:r[1],phone:r[2],email:r[3],address:r[4],notes:r[5]})); }
+function products_() { return rows_(getSpreadsheet_(), BF.SHEETS.PRODUCTS).filter(r => String(r[5]).toLowerCase() !== 'לא').map(r => ({id:r[0],name:r[1],unit:r[2],targetCost:Number(r[3]),minutes:Number(r[4]),salePrice:Number(r[6]),category:r[7] || ''})); }
+function ingredients_() { return rows_(getSpreadsheet_(), BF.SHEETS.INGREDIENTS).map(r => ({id:r[0],name:r[1],unit:r[2],cost:Number(r[3]),supplier:r[4]})); }
+function recipeMedia_() { return rows_(getSpreadsheet_(), BF.SHEETS.RECIPE_MEDIA).map(r => ({id:r[0],productId:r[1],title:r[2],url:r[3],note:r[4],created:formatDate_(r[5])})); }
 function ensureSheet_(ss,name,headers) { const sh = ss.getSheetByName(name) || ss.insertSheet(name); if (sh.getLastRow() === 0) { sh.appendRow(headers); sh.setFrozenRows(1); sh.getRange(1,1,1,headers.length).setBackground('#4a2c21').setFontColor('#ffffff').setFontWeight('bold'); sh.autoResizeColumns(1,headers.length); } else { const current=sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0]; headers.slice(current.length).forEach((header,index)=>sh.getRange(1,current.length+index+1).setValue(header)); } }
 function seedDemoData_(ss) {
   if (rows_(ss, BF.SHEETS.PRODUCTS).length) return;
