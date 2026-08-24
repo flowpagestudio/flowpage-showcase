@@ -10,6 +10,7 @@ const CONFIG = {
   SHEET_NAME: 'פניות',
   GALLERY_SHEET_NAME: 'גלריה',
   SETTINGS_SHEET_NAME: 'הגדרות',
+  TEMPLATES_SHEET_NAME: 'תבניות',
   ATTACHMENTS_FOLDER_ID: '1iD6btMyEAOhPRWhAlJnV-f71VdkVMDky',
   OWNER_EMAIL: 'flowpagestudio@gmail.com',
   BUSINESS_NAME: 'טכנאי מחשבים',
@@ -39,6 +40,34 @@ const GALLERY_HEADERS = [
 ];
 
 const SETTINGS_HEADERS = ['מפתח', 'ערך'];
+const TEMPLATE_HEADERS = ['מזהה', 'שם', 'נמען', 'נושא', 'תוכן'];
+
+const MESSAGE_TEMPLATE_SEED = [
+  {
+    id: 'owner_new_lead', name: 'פנייה חדשה לבעל העסק', recipient: 'בעל העסק',
+    subject: 'פנייה חדשה: {{fullName}} | {{leadId}}',
+    body: 'התקבלה פנייה חדשה.\n\nמזהה: {{leadId}}\nלקוח: {{fullName}}\nטלפון: {{phone}}\nאימייל: {{email}}\nתקלה: {{issueType}}\nמכשיר: {{deviceModel}}\nשירות: {{serviceType}}\nמועד מועדף: {{preferredDateTime}}\nכתובת: {{address}}\n\n{{description}}\n{{attachments}}\n{{calendarNote}}\n\nניהול: {{managementUrl}}'
+  },
+  {
+    id: 'customer_lead_received', name: 'אישור קבלת פנייה ללקוח', recipient: 'לקוח',
+    subject: 'אישור קבלת פנייה | {{leadId}}',
+    body: 'שלום {{fullName}},\n\n{{confirmationMessage}}\nמספר פנייה: {{leadId}}\n\nתודה,\n{{businessName}}'
+  },
+  {
+    id: 'customer_status_updated', name: 'עדכון סטטוס ללקוח', recipient: 'לקוח',
+    subject: 'עדכון לפנייה שלך | {{leadId}}',
+    body: 'שלום {{fullName}},\n\nסטטוס הפנייה עודכן ל: {{status}}\nמספר פנייה: {{leadId}}\n\nתודה,\n{{businessName}}'
+  }
+];
+
+const TEMPLATE_VARIABLES = [
+  ['{{leadId}}', 'מזהה פנייה'], ['{{fullName}}', 'שם הלקוח'], ['{{phone}}', 'טלפון'],
+  ['{{email}}', 'אימייל'], ['{{issueType}}', 'סוג תקלה'], ['{{deviceModel}}', 'מותג / דגם'],
+  ['{{description}}', 'תיאור התקלה'], ['{{address}}', 'כתובת'], ['{{serviceType}}', 'סוג שירות'],
+  ['{{preferredDateTime}}', 'מועד מועדף'], ['{{status}}', 'סטטוס'], ['{{attachments}}', 'קישורים לקבצים'],
+  ['{{calendarNote}}', 'הערת יומן'], ['{{confirmationMessage}}', 'הודעת אישור'],
+  ['{{businessName}}', 'שם העסק'], ['{{managementUrl}}', 'קישור לניהול']
+];
 
 const GALLERY_SEED = [
   {
@@ -247,11 +276,10 @@ function updateLeadStatus(id, status) {
   const email = rows[i][4];
   const name = rows[i][2];
   if (email) {
-    GmailApp.sendEmail(
-      email,
-      'עדכון לפנייה שלך | ' + id,
-      'שלום ' + name + ',\n\nסטטוס הפנייה עודכן ל: ' + status + '\n\nתודה,\n' + CONFIG.BUSINESS_NAME
-    );
+    const message = renderTemplate_('customer_status_updated', buildTemplateData_({
+      leadId: id, fullName: name, email: email, status: status
+    }));
+    GmailApp.sendEmail(email, message.subject, message.body);
   }
   return { ok: true, id: id, status: status };
 }
@@ -261,6 +289,44 @@ function updateLeadStatus(id, status) {
 function getGalleryData() {
   assertOwner_();
   return readGalleryRows_();
+}
+
+/* ========== Message templates management ========== */
+
+function getMessageTemplates() {
+  assertOwner_();
+  return JSON.stringify({ ok: true, templates: readMessageTemplates_(), variables: TEMPLATE_VARIABLES });
+}
+
+function saveMessageTemplate(template) {
+  assertOwner_();
+  if (!template || !template.id) throw new Error('לא נבחרה תבנית.');
+  if (!String(template.subject || '').trim()) throw new Error('יש להזין נושא למייל.');
+  if (!String(template.body || '').trim()) throw new Error('יש להזין תוכן למייל.');
+  const sh = getTemplatesSheet_();
+  const rows = sh.getDataRange().getValues();
+  const index = rows.findIndex(function(r, n) { return n > 0 && r[0] === template.id; });
+  if (index < 1) throw new Error('תבנית לא נמצאה. הריצו setupProject() מחדש.');
+  sh.getRange(index + 1, 4, 1, 2).setValues([[String(template.subject), String(template.body)]]);
+  return { ok: true };
+}
+
+function previewMessageTemplate(template) {
+  assertOwner_();
+  const data = buildTemplateData_({ leadId: 'TC-דוגמה-001', fullName: 'דנה כהן', phone: '050-1234567',
+    email: 'dana@example.com', issueType: 'מחשב איטי', deviceModel: 'Lenovo ThinkPad',
+    description: 'המחשב איטי מאוד מאז העדכון האחרון.', address: 'רחוב הדוגמה 10, ירושלים',
+    serviceType: 'ביקור טכנאי', preferredDateTime: '2026-08-25 10:00', status: 'בטיפול',
+    attachments: ['https://example.com/file-1'], calendarNote: 'הביקור נוסף ליומן.',
+    confirmationMessage: 'פנייתך נקלטה בהצלחה. נחזור אליך בהקדם לתיאום.' });
+  return { subject: replaceTemplateVariables_(template.subject || '', data), body: replaceTemplateVariables_(template.body || '', data) };
+}
+
+function sendMessageTemplateTest(template) {
+  assertOwner_();
+  const preview = previewMessageTemplate(template);
+  GmailApp.sendEmail(CONFIG.OWNER_EMAIL, '[בדיקה] ' + preview.subject, preview.body);
+  return { ok: true, message: 'מייל בדיקה נשלח אל ' + CONFIG.OWNER_EMAIL };
 }
 
 function getPublicGallery() {
@@ -336,6 +402,18 @@ function ensureWorkbook_() {
   ensureLeadsSheet_(ss);
   ensureGallerySheet_(ss);
   ensureSettingsSheet_(ss);
+  ensureTemplatesSheet_(ss);
+}
+
+function ensureTemplatesSheet_(ss) {
+  let sheet = ss.getSheetByName(CONFIG.TEMPLATES_SHEET_NAME);
+  if (!sheet) sheet = ss.insertSheet(CONFIG.TEMPLATES_SHEET_NAME);
+  const headerValues = sheet.getRange(1, 1, 1, TEMPLATE_HEADERS.length).getValues()[0];
+  if (headerValues.join('|') !== TEMPLATE_HEADERS.join('|')) sheet.getRange(1, 1, 1, TEMPLATE_HEADERS.length).setValues([TEMPLATE_HEADERS]);
+  const existing = sheet.getDataRange().getValues().slice(1).map(function(r) { return r[0]; });
+  MESSAGE_TEMPLATE_SEED.forEach(function(t) {
+    if (existing.indexOf(t.id) === -1) sheet.appendRow([t.id, t.name, t.recipient, t.subject, t.body]);
+  });
 }
 
 function ensureLeadsSheet_(ss) {
@@ -404,6 +482,18 @@ function getSettingsSheet_() {
   const sheet = SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName(CONFIG.SETTINGS_SHEET_NAME);
   if (!sheet) throw new Error('גיליון ההגדרות לא נמצא. הריצו setupProject().');
   return sheet;
+}
+
+function getTemplatesSheet_() {
+  const sheet = SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName(CONFIG.TEMPLATES_SHEET_NAME);
+  if (!sheet) throw new Error('גיליון התבניות לא נמצא. הריצו setupProject().');
+  return sheet;
+}
+
+function readMessageTemplates_() {
+  return getTemplatesSheet_().getDataRange().getValues().slice(1)
+    .filter(function(r) { return r[0]; })
+    .map(function(r) { return { id: String(r[0]), name: String(r[1] || ''), recipient: String(r[2] || ''), subject: String(r[3] || ''), body: String(r[4] || '') }; });
 }
 
 function getSetting_(key) {
@@ -538,34 +628,41 @@ function createCalendarEvent_(leadId, p, attachmentUrls) {
 }
 
 function notifyOwner_(leadId, p, attachmentUrls, event) {
-  const subject = 'פנייה חדשה: ' + p.fullName + ' | ' + leadId;
-  const body = [
-    'התקבלה פנייה חדשה.',
-    '',
-    'מזהה: ' + leadId,
-    'לקוח: ' + p.fullName,
-    'טלפון: ' + p.phone,
-    'אימייל: ' + p.email,
-    'תקלה: ' + p.issueType,
-    'מכשיר: ' + (p.deviceModel || '-'),
-    'שירות: ' + p.serviceType,
-    'מועד מועדף: ' + (p.preferredDateTime || '-'),
-    'כתובת: ' + (p.address || '-'),
-    '',
-    p.description,
-    attachmentUrls.length ? '\nקבצים:\n' + attachmentUrls.join('\n') : '',
-    event ? '\nהביקור נוסף ליומן.' : '',
-    '',
-    'ניהול: פתחו את ה-Web App עם ?view=management'
-  ].join('\n');
-  GmailApp.sendEmail(CONFIG.OWNER_EMAIL, subject, body);
+  const message = renderTemplate_('owner_new_lead', buildTemplateData_(Object.assign({}, p, {
+    leadId: leadId, attachments: attachmentUrls,
+    calendarNote: event ? 'הביקור נוסף ליומן.' : ''
+  })));
+  GmailApp.sendEmail(CONFIG.OWNER_EMAIL, message.subject, message.body);
 }
 
 function notifyCustomer_(leadId, p, event) {
-  const body = event
-    ? 'שלום ' + p.fullName + ',\n\nפנייתך נקלטה והביקור נוסף ליומן.\nמספר פנייה: ' + leadId + '\n\nתודה,\n' + CONFIG.BUSINESS_NAME
-    : 'שלום ' + p.fullName + ',\n\nפנייתך נקלטה בהצלחה. נחזור אליך בהקדם לתיאום.\nמספר פנייה: ' + leadId + '\n\nתודה,\n' + CONFIG.BUSINESS_NAME;
-  GmailApp.sendEmail(p.email, 'אישור קבלת פנייה | ' + leadId, body);
+  const message = renderTemplate_('customer_lead_received', buildTemplateData_(Object.assign({}, p, {
+    leadId: leadId, confirmationMessage: event ? 'פנייתך נקלטה והביקור נוסף ליומן.' : 'פנייתך נקלטה בהצלחה. נחזור אליך בהקדם לתיאום.'
+  })));
+  GmailApp.sendEmail(p.email, message.subject, message.body);
+}
+
+function buildTemplateData_(source) {
+  const s = source || {};
+  return {
+    leadId: s.leadId || '-', fullName: s.fullName || '-', phone: s.phone || '-', email: s.email || '-',
+    issueType: s.issueType || '-', deviceModel: s.deviceModel || '-', description: s.description || '-',
+    address: s.address || '-', serviceType: s.serviceType || '-', preferredDateTime: s.preferredDateTime || '-',
+    status: s.status || '-', attachments: (s.attachments && s.attachments.length) ? 'קבצים:\n' + s.attachments.join('\n') : '',
+    calendarNote: s.calendarNote || '', confirmationMessage: s.confirmationMessage || '',
+    businessName: getSetting_('BUSINESS_NAME') || CONFIG.BUSINESS_NAME,
+    managementUrl: ScriptApp.getService().getUrl() ? ScriptApp.getService().getUrl() + '?view=management' : 'פתחו את ה-Web App עם ?view=management'
+  };
+}
+
+function renderTemplate_(templateId, data) {
+  const template = readMessageTemplates_().filter(function(t) { return t.id === templateId; })[0];
+  if (!template) throw new Error('תבנית מייל חסרה: ' + templateId);
+  return { subject: replaceTemplateVariables_(template.subject, data), body: replaceTemplateVariables_(template.body, data) };
+}
+
+function replaceTemplateVariables_(text, data) {
+  return String(text || '').replace(/{{([A-Za-z]+)}}/g, function(match, key) { return data[key] != null ? String(data[key]) : match; });
 }
 
 function sanitizeFileName_(name) {

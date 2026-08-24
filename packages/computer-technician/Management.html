@@ -243,6 +243,24 @@
       align-items: center;
       gap: 8px;
     }
+    .template-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); }
+    .template-list { background: white; border-left: 1px solid var(--line); }
+    .template-choice { display: block; width: 100%; border: 0; border-bottom: 1px solid var(--line); background: white; text-align: right; padding: 15px 17px; font: 700 14px Heebo, Arial, sans-serif; color: var(--ink); cursor: pointer; }
+    .template-choice small { display: block; margin-top: 3px; color: var(--muted); font-weight: 400; }
+    .template-choice.active { background: #eef8cb; color: #496000; }
+    .template-editor { padding: 20px; }
+    .field-label { display: block; font-weight: 700; font-size: 13px; margin: 0 0 6px; }
+    .rich-editor { width: 100%; min-height: 48px; border: 1px solid var(--line); background: white; color: var(--ink); padding: 10px 12px; font: 15px Heebo, Arial, sans-serif; margin-bottom: 15px; line-height: 1.7; white-space: pre-wrap; outline: none; }
+    .rich-editor:focus { border-color: #8cab27; box-shadow: 0 0 0 3px #eaf4cc; }
+    .rich-editor.body-editor { min-height: 220px; }
+    .merge-tag { display: inline-block; direction: rtl; background: #e8f7b9; color: #466000; border: 1px solid #b9cf76; border-radius: 3px; padding: 0 6px; margin: 0 2px; font-size: 13px; font-weight: 700; white-space: nowrap; user-select: all; }
+    .variables { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 18px; }
+    .variable { border: 1px solid #b9cb8f; color: #557100; background: #f4fadf; padding: 6px 9px; font: 700 13px Heebo, Arial, sans-serif; cursor: pointer; }
+    .template-actions { display: flex; gap: 9px; flex-wrap: wrap; }
+    .button { border: 0; background: var(--ink); color: white; padding: 10px 14px; font: 700 14px Heebo, Arial, sans-serif; cursor: pointer; }
+    .button.secondary { background: white; color: var(--ink); border: 1px solid var(--line); }
+    .preview { margin-top: 18px; background: white; border: 1px solid var(--line); padding: 15px; white-space: pre-wrap; color: #45554d; line-height: 1.55; }
+    .notice { margin-top: 12px; color: #557100; font-weight: 700; }
     .empty, .status-line {
       padding: 22px;
       color: var(--muted);
@@ -273,6 +291,8 @@
       .desk-head p { margin-top: 8px; }
       .lead-top { grid-template-columns: 1fr; }
       .lead select { width: 100%; }
+      .template-layout { grid-template-columns: 1fr; }
+      .template-list { border-left: 0; border-bottom: 1px solid var(--line); }
     }
   </style>
 </head>
@@ -308,6 +328,22 @@
         <span class="badge">גישה מורשית בלבד</span>
       </header>
       <div id="leadsOut"><div class="status-line">טוען פניות…</div></div>
+    </section>
+
+    <div class="desk-head">
+      <div>
+        <p class="eyebrow">תקשורת עם לקוחות</p>
+        <h2>תבניות הודעה</h2>
+      </div>
+      <p>משנים נוסח מייל בלי לגעת בקוד.</p>
+    </div>
+
+    <section class="panel">
+      <header class="panel-head">
+        <h3>מיילים אוטומטיים</h3>
+        <span class="badge">עריכה חיה</span>
+      </header>
+      <div id="templatesOut"><div class="status-line">טוען תבניות…</div></div>
     </section>
 
     <div class="desk-head">
@@ -497,6 +533,72 @@
       out.appendChild(grid);
     }
 
+    var templateData = null;
+    var selectedTemplateId = null;
+    var lastFocusedField = 'templateBody';
+
+    function showTemplates(raw) {
+      var out = document.getElementById('templatesOut');
+      try { templateData = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { fail(new Error('תשובת התבניות אינה תקינה.'), 'templatesOut'); return; }
+      var templates = (templateData && templateData.templates) || [];
+      if (!templates.length) { out.innerHTML = '<div class="empty">לא נמצאו תבניות. הריצו setupProject().</div>'; return; }
+      if (!selectedTemplateId || !templates.some(function(t) { return t.id === selectedTemplateId; })) selectedTemplateId = templates[0].id;
+      renderTemplateEditor();
+    }
+
+    function renderTemplateEditor() {
+      var out = document.getElementById('templatesOut');
+      var templates = templateData.templates || [];
+      var current = templates.filter(function(t) { return t.id === selectedTemplateId; })[0];
+      var choices = templates.map(function(t) { return '<button class="template-choice' + (t.id === selectedTemplateId ? ' active' : '') + '" data-id="' + esc(t.id) + '">' + esc(t.name) + '<small>נמען: ' + esc(t.recipient) + '</small></button>'; }).join('');
+      var variables = (templateData.variables || []).map(function(v) { return '<button class="variable" data-token="' + esc(v[0]) + '">' + esc(v[1]) + '</button>'; }).join('');
+      out.innerHTML = '<div class="template-layout"><aside class="template-list">' + choices + '</aside><div class="template-editor">' +
+        '<label class="field-label">נושא</label><div id="templateSubject" class="rich-editor" contenteditable="true" role="textbox" aria-label="נושא המייל"></div>' +
+        '<label class="field-label">תוכן ההודעה</label><div id="templateBody" class="rich-editor body-editor" contenteditable="true" role="textbox" aria-label="תוכן ההודעה"></div>' +
+        '<label class="field-label">הוספת פרט אוטומטי להודעה</label><div class="variables">' + variables + '</div><small>לחצו על פרט כדי להוסיף אותו במקום שבו הסמן נמצא. הפרטים המודגשים יתמלאו אוטומטית בכל פנייה.</small>' +
+        '<div class="template-actions"><button class="button" id="saveTemplate">שמירת תבנית</button><button class="button secondary" id="previewTemplate">תצוגה מקדימה</button><button class="button secondary" id="testTemplate">שליחת בדיקה אליי</button></div><div id="templateNotice"></div><div id="templatePreview"></div></div></div>';
+      Array.prototype.forEach.call(out.querySelectorAll('.template-choice'), function(btn) { btn.addEventListener('click', function() { selectedTemplateId = btn.getAttribute('data-id'); renderTemplateEditor(); }); });
+      populateRichEditor('templateSubject', current.subject);
+      populateRichEditor('templateBody', current.body);
+      ['templateSubject', 'templateBody'].forEach(function(id) { document.getElementById(id).addEventListener('focus', function() { lastFocusedField = id; }); });
+      Array.prototype.forEach.call(out.querySelectorAll('.variable'), function(btn) { btn.addEventListener('click', function() { insertToken(btn.getAttribute('data-token')); }); });
+      document.getElementById('saveTemplate').addEventListener('click', saveTemplate);
+      document.getElementById('previewTemplate').addEventListener('click', previewTemplate);
+      document.getElementById('testTemplate').addEventListener('click', testTemplate);
+    }
+
+    function tokenLabel(token) { var found = (templateData.variables || []).filter(function(v) { return v[0] === token; })[0]; return found ? found[1] : token; }
+    function createTag(token) { var tag = document.createElement('span'); tag.className = 'merge-tag'; tag.contentEditable = 'false'; tag.dataset.token = token; tag.textContent = tokenLabel(token); return tag; }
+    function populateRichEditor(id, raw) {
+      var editor = document.getElementById(id); editor.innerHTML = '';
+      var pattern = /{{[A-Za-z]+}}/g, last = 0, match;
+      while ((match = pattern.exec(raw))) { editor.appendChild(document.createTextNode(raw.slice(last, match.index))); editor.appendChild(createTag(match[0])); last = match.index + match[0].length; }
+      editor.appendChild(document.createTextNode(raw.slice(last)));
+    }
+    function editorValue(id) {
+      var editor = document.getElementById(id), value = '';
+      function read(node) {
+        Array.prototype.forEach.call(node.childNodes, function(child) {
+          if (child.nodeType === Node.TEXT_NODE) value += child.nodeValue;
+          else if (child.nodeType === Node.ELEMENT_NODE && child.dataset && child.dataset.token) value += child.dataset.token;
+          else if (child.nodeName === 'BR') value += '\n';
+          else { read(child); if (child.nodeName === 'DIV' || child.nodeName === 'P') value += '\n'; }
+        });
+      }
+      read(editor); return value.replace(/\n{3,}/g, '\n\n').trim();
+    }
+    function currentTemplateInput() { var t = templateData.templates.filter(function(x) { return x.id === selectedTemplateId; })[0]; return { id: t.id, subject: editorValue('templateSubject'), body: editorValue('templateBody') }; }
+    function insertToken(token) {
+      var editor = document.getElementById(lastFocusedField) || document.getElementById('templateBody'); editor.focus();
+      var selection = window.getSelection();
+      if (!selection.rangeCount || !editor.contains(selection.getRangeAt(0).commonAncestorContainer)) { var end = document.createRange(); end.selectNodeContents(editor); end.collapse(false); selection.removeAllRanges(); selection.addRange(end); }
+      var range = selection.getRangeAt(0); range.deleteContents(); var tag = createTag(token); range.insertNode(tag); range.setStartAfter(tag); range.collapse(true); selection.removeAllRanges(); selection.addRange(range);
+    }
+    function templateNotice(message) { var n = document.getElementById('templateNotice'); n.className = 'notice'; n.textContent = message; }
+    function saveTemplate() { var t = currentTemplateInput(); google.script.run.withSuccessHandler(function() { var saved = templateData.templates.filter(function(x) { return x.id === t.id; })[0]; saved.subject = t.subject; saved.body = t.body; templateNotice('התבנית נשמרה.'); }).withFailureHandler(function(e) { fail(e, 'templatesOut'); }).saveMessageTemplate(t); }
+    function previewTemplate() { var p = document.getElementById('templatePreview'); p.className = 'preview'; p.textContent = 'טוען תצוגה מקדימה…'; google.script.run.withSuccessHandler(function(r) { p.innerHTML = '<b>נושא:</b> ' + esc(r.subject) + '\n\n' + esc(r.body); }).withFailureHandler(function(e) { fail(e, 'templatesOut'); }).previewMessageTemplate(currentTemplateInput()); }
+    function testTemplate() { google.script.run.withSuccessHandler(function(r) { templateNotice(r.message); }).withFailureHandler(function(e) { fail(e, 'templatesOut'); }).sendMessageTemplateTest(currentTemplateInput()); }
+
     function loadLeads() {
       var out = document.getElementById('leadsOut');
       if (out) out.innerHTML = '<div class="status-line">טוען פניות…</div>';
@@ -515,9 +617,14 @@
         .getGalleryData();
     }
 
+    function loadTemplates() {
+      google.script.run.withSuccessHandler(showTemplates).withFailureHandler(function(e) { fail(e, 'templatesOut'); }).getMessageTemplates();
+    }
+
     function boot() {
       loadLeads();
       loadGallery();
+      loadTemplates();
     }
 
     boot();
