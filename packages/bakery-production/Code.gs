@@ -109,6 +109,28 @@ function saveRecipeIngredient(payload) {
   return {ok:true};
 }
 
+function updateRecipeIngredient(rowNumber, quantity) {
+  const ss = getSpreadsheet_(); assertSetup_(ss);
+  const row = Number(rowNumber); const qty = Number(quantity);
+  if (row < 2 || qty <= 0) throw new Error('כמות המרכיב חייבת להיות גדולה מאפס.');
+  ss.getSheetByName(BF.SHEETS.RECIPES).getRange(row, 3).setValue(qty);
+  return {ok:true};
+}
+
+function deleteRecipeIngredient(rowNumber) {
+  const ss = getSpreadsheet_(); assertSetup_(ss);
+  const row = Number(rowNumber);
+  if (row < 2) throw new Error('שורת מתכון לא תקינה.');
+  ss.getSheetByName(BF.SHEETS.RECIPES).deleteRow(row);
+  return {ok:true};
+}
+
+function loadBakeryDemoData() {
+  const ss = getSpreadsheet_(); assertSetup_(ss);
+  const added = loadBakeryDemoData_(ss, true);
+  return {ok:true, added};
+}
+
 function uploadRecipeImage(payload) {
   const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!payload || !payload.productId || !payload.base64 || !payload.fileName) throw new Error('יש לבחור מוצר וקובץ תמונה.');
@@ -180,16 +202,30 @@ function customers_() { return rows_(getSpreadsheet_(), BF.SHEETS.CUSTOMERS).fil
 function products_() { return rows_(getSpreadsheet_(), BF.SHEETS.PRODUCTS).filter(r => String(r[5]).toLowerCase() !== 'לא').map(r => ({id:r[0],name:r[1],unit:r[2],targetCost:Number(r[3]),minutes:Number(r[4]),salePrice:Number(r[6]),category:r[7] || ''})); }
 function ingredients_() { return rows_(getSpreadsheet_(), BF.SHEETS.INGREDIENTS).map(r => ({id:r[0],name:r[1],unit:r[2],cost:Number(r[3]),supplier:r[4]})); }
 function recipeMedia_() { return rows_(getSpreadsheet_(), BF.SHEETS.RECIPE_MEDIA).map(r => ({id:r[0],productId:r[1],title:r[2],url:r[3],note:r[4],created:formatDate_(r[5])})); }
-function recipeIngredients_() { const ingredients=indexBy_(ingredients_(), 'id'); return rows_(getSpreadsheet_(), BF.SHEETS.RECIPES).map(r => ({productId:r[0],ingredientId:r[1],name:ingredients[r[1]]?.name || r[1],unit:ingredients[r[1]]?.unit || '',quantity:Number(r[2]),unitCost:Number(ingredients[r[1]]?.cost || 0),cost:Number(r[2]) * Number(ingredients[r[1]]?.cost || 0)})); }
+function recipeIngredients_() { const ss=getSpreadsheet_(); const ingredients=indexBy_(ingredients_(), 'id'); const sh=ss.getSheetByName(BF.SHEETS.RECIPES); if (!sh || sh.getLastRow()<2) return []; return sh.getRange(2,1,sh.getLastRow()-1,sh.getLastColumn()).getValues().map((r,index) => ({rowNumber:index+2,productId:r[0],ingredientId:r[1],name:ingredients[r[1]]?.name || r[1],unit:ingredients[r[1]]?.unit || '',quantity:Number(r[2]),unitCost:Number(ingredients[r[1]]?.cost || 0),cost:Number(r[2]) * Number(ingredients[r[1]]?.cost || 0)})); }
 function ensureSheet_(ss,name,headers) { const sh = ss.getSheetByName(name) || ss.insertSheet(name); if (sh.getLastRow() === 0) { sh.appendRow(headers); sh.setFrozenRows(1); sh.getRange(1,1,1,headers.length).setBackground('#4a2c21').setFontColor('#ffffff').setFontWeight('bold'); sh.autoResizeColumns(1,headers.length); } else { const current=sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0]; headers.slice(current.length).forEach((header,index)=>sh.getRange(1,current.length+index+1).setValue(header)); } }
 function seedDemoData_(ss) {
   if (rows_(ss, BF.SHEETS.PRODUCTS).length) return;
   [['CUS-001','משפחת כהן','050-0000001','cohen@example.com','בית שמש','איסוף ביום שישי','כן'],['CUS-002','דנה לוי','050-0000002','dana@example.com','ירושלים','ללא אגוזים','כן']].forEach(r=>append_(ss,BF.SHEETS.CUSTOMERS,r));
-  [['P-CHOC','עוגת שוקולד חגיגית','עוגה',42,55,'כן',120,'עוגות'],['P-CHEESE','עוגת גבינה אפויה','עוגה',54,75,'כן',145,'עוגות'],['P-COOKIE','מארז עוגיות חמאה','מארז',28,40,'כן',75,'מארזים']].forEach(r=>append_(ss,BF.SHEETS.PRODUCTS,r));
-  [['I-FLOUR','קמח','ק״ג',6.5,'ספק אפייה'],['I-SUGAR','סוכר','ק״ג',5.8,'ספק אפייה'],['I-EGG','ביצים','יח׳',1.1,'מכולת'],['I-CHOC','שוקולד מריר','ק״ג',43,'ספק אפייה'],['I-CHEESE','גבינת שמנת','ק״ג',31,'מחלבה'],['I-BUTTER','חמאה','ק״ג',38,'מחלבה']].forEach(r=>append_(ss,BF.SHEETS.INGREDIENTS,r));
-  [['P-CHOC','I-FLOUR',0.35],['P-CHOC','I-SUGAR',0.28],['P-CHOC','I-EGG',4],['P-CHOC','I-CHOC',0.25],['P-CHEESE','I-FLOUR',0.12],['P-CHEESE','I-SUGAR',0.2],['P-CHEESE','I-EGG',5],['P-CHEESE','I-CHEESE',0.65],['P-COOKIE','I-FLOUR',0.3],['P-COOKIE','I-SUGAR',0.18],['P-COOKIE','I-BUTTER',0.22],['P-COOKIE','I-EGG',1]].forEach(r=>append_(ss,BF.SHEETS.RECIPES,r));
-  [['P-CHOC',1,'שקילה והכנת בלילה',15,''],['P-CHOC',2,'אפייה',35,'לבדוק עם קיסם'],['P-CHOC',3,'קירור וקישוט',20,''],['P-CHEESE',1,'הכנת בסיס ומלית',25,''],['P-CHEESE',2,'אפייה וקירור',50,'קירור מלא לפני אריזה'],['P-COOKIE',1,'הכנת בצק',15,''],['P-COOKIE',2,'אפייה וחלוקה למארזים',25,'']].forEach(r=>append_(ss,BF.SHEETS.STEPS,r));
+  loadBakeryDemoData_(ss);
 }
+function loadBakeryDemoData_(ss, replaceDemoRecipes) {
+  const products=[['P-CHOC','עוגת שוקולד חגיגית','עוגה',42,55,'כן',120,'עוגות'],['P-CHEESE','עוגת גבינה אפויה','עוגה',54,75,'כן',145,'עוגות'],['P-COOKIE','מארז עוגיות חמאה','מארז',28,40,'כן',75,'מארזים']];
+  const ingredients=[['I-FLOUR','קמח','ק״ג',6.5,'ספק אפייה'],['I-SUGAR','סוכר','ק״ג',5.8,'ספק אפייה'],['I-EGG','ביצים','יח׳',1.1,'מכולת'],['I-CHOC','שוקולד מריר','ק״ג',43,'ספק אפייה'],['I-COCOA','אבקת קקאו','ק״ג',52,'ספק אפייה'],['I-OIL','שמן','ליטר',11,'מכולת'],['I-BAKING','אבקת אפייה','ק״ג',24,'ספק אפייה'],['I-CHEESE','גבינת שמנת','ק״ג',31,'מחלבה'],['I-BUTTER','חמאה','ק״ג',38,'מחלבה'],['I-BISCUIT','ביסקוויטים','ק״ג',24,'ספק אפייה'],['I-CREAM','שמנת חמוצה','ק״ג',18,'מחלבה'],['I-VANILLA','תמצית וניל','ליטר',160,'ספק אפייה']];
+  const recipes=[['P-CHOC','I-FLOUR',0.30],['P-CHOC','I-SUGAR',0.25],['P-CHOC','I-EGG',4],['P-CHOC','I-CHOC',0.22],['P-CHOC','I-COCOA',0.06],['P-CHOC','I-OIL',0.18],['P-CHOC','I-BAKING',0.012],['P-CHEESE','I-BISCUIT',0.25],['P-CHEESE','I-BUTTER',0.12],['P-CHEESE','I-CHEESE',0.75],['P-CHEESE','I-SUGAR',0.18],['P-CHEESE','I-EGG',5],['P-CHEESE','I-CREAM',0.20],['P-CHEESE','I-VANILLA',0.006],['P-COOKIE','I-FLOUR',0.35],['P-COOKIE','I-BUTTER',0.22],['P-COOKIE','I-SUGAR',0.15],['P-COOKIE','I-EGG',1],['P-COOKIE','I-VANILLA',0.004],['P-COOKIE','I-BAKING',0.008]];
+  let added=0;
+  products.forEach(r=>{if(!hasId_(ss,BF.SHEETS.PRODUCTS,r[0])){append_(ss,BF.SHEETS.PRODUCTS,r);added++;}});
+  ingredients.forEach(r=>{if(!hasId_(ss,BF.SHEETS.INGREDIENTS,r[0])){append_(ss,BF.SHEETS.INGREDIENTS,r);added++;}});
+  if (replaceDemoRecipes) {
+    const sh=ss.getSheetByName(BF.SHEETS.RECIPES); const demoProducts={'P-CHOC':true,'P-CHEESE':true,'P-COOKIE':true};
+    const values=sh.getDataRange().getValues();
+    for(let i=values.length-1;i>=1;i--) if(demoProducts[values[i][0]]) sh.deleteRow(i+1);
+  }
+  const existing=rows_(ss,BF.SHEETS.RECIPES).map(r=>r.slice(0,3).join('|'));
+  recipes.forEach(r=>{if(!existing.includes(r.join('|'))){append_(ss,BF.SHEETS.RECIPES,r);added++;}});
+  return added;
+}
+function hasId_(ss,sheetName,id) { return rows_(ss,sheetName).some(r=>r[0]===id); }
 function rows_(ss,name) { const sh=ss.getSheetByName(name); if (!sh || sh.getLastRow()<2) return []; return sh.getRange(2,1,sh.getLastRow()-1,sh.getLastColumn()).getValues(); }
 function append_(ss,name,row) { ss.getSheetByName(name).appendRow(row); }
 function assertSetup_(ss) { if (!ss.getSheetByName(BF.SHEETS.PRODUCTS)) throw new Error('יש להריץ תחילה את setupBakeFlow.'); }
