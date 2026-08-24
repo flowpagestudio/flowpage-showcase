@@ -48,6 +48,7 @@ function setupBakeFlow() {
 function getAppData() {
   const ss = getSpreadsheet_();
   assertSetup_(ss);
+  if (!rows_(ss, BF.SHEETS.PRODUCTS).length) loadBakeryDemoData_(ss);
   const orders = getOrders_().filter(o => o.status !== 'נמסרה');
   const batches = rows_(ss, BF.SHEETS.BATCHES).map(rowToBatch_);
   const counts = BF.STATUS.reduce((acc, status) => (acc[status] = orders.filter(o => o.status === status).length, acc), {});
