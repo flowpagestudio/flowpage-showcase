@@ -12,7 +12,7 @@ body{overflow-x:hidden}.card,.two,.grid,.form-grid{min-width:0}.table-wrap{max-w
 const $=id=>document.getElementById(id), TABS=[['dashboard','סקירה'],['orders','הזמנות'],['customers','לקוחות'],['products','מוצרים'],['ingredients','חומרי גלם'],['recipes','מתכונים · BOM'],['production','ייצור · קניות · אריזה']];
 let state={products:[],ingredients:[],customers:[],orders:[],recipeIngredients:[],recipeSteps:[],recipeMedia:[],plans:[],dashboard:{}},view='dashboard',edit={customer:null,product:null,ingredient:null,order:null},selectedRecipe='',planDetails=null;
 const call=(n,...a)=>new Promise((ok,no)=>google.script.run.withSuccessHandler(ok).withFailureHandler(no)[n](...a));
-const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])), money=v=>new Intl.NumberFormat('he-IL',{style:'currency',currency:'ILS',maximumFractionDigits:2}).format(Number(v)||0), date=v=>v?String(v).slice(0,10):'', active=a=>a.filter(x=>x.active!==false);
+const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])), money=v=>new Intl.NumberFormat('he-IL',{style:'currency',currency:'ILS',maximumFractionDigits:2}).format(Number(v)||0), date=v=>{if(!v)return '';if(v instanceof Date)return v.toISOString().slice(0,10);return String(v).slice(0,10)}, active=a=>a.filter(x=>x.active!==false);
 function toast(m,bad=false){const n=$('notice');n.textContent=m;n.className='notice'+(bad?' error':'');n.style.display='block';setTimeout(()=>n.style.display='none',3200)}
 async function run(n,...a){try{const r=await call(n,...a);toast(r?.message||'נשמר בהצלחה');await loadData(false);return r}catch(e){toast(e?.message||String(e),true);throw e}}
 function tabs(){$('tabs').innerHTML=TABS.map(([id,l])=>'<button class="tab '+(view===id?'active':'')+'" onclick="go(\''+id+'\')">'+l+'</button>').join('')}
@@ -57,7 +57,7 @@ function dashboard(){
 }
 async function quickOrderStatus(id,status){if(!status)return;await run('setOrderStatus',id,status);render()}
 function planHtml(d){
-  const buy=d.shoppingTasks||d.shopping||[], pack=d.packingTasks||[];
+  const buy=d.shoppingTasks?.length?d.shoppingTasks:(d.shopping||[]), pack=d.packingTasks||[];
   return '<div class="plan-detail"><h3>רכש · עלות משוערת '+money(d.totalCost)+'</h3>'+
   (buy.length?buy.map(i=>'<div class="bom-line"><span><b>'+esc(i.name)+'</b><br><small>'+Number(i.quantity).toFixed(3)+' '+esc(i.unit)+' · '+money(i.cost)+'</small></span>'+(i.id?'<select onchange="setShopping(\''+i.id+'\',this.value)">'+['נדרש','נרכש'].map(x=>'<option '+(i.status===x?'selected':'')+'>'+x+'</option>').join('')+'</select>':'')+'</div>').join(''):'<p class="empty">אין רכיבים לרכש.</p>')+
   '<h3 style="margin-top:20px">תוכנית עבודה</h3>'+d.batches.map(b=>'<div class="card" style="margin:8px 0;padding:12px"><b>'+esc(b.productName)+' × '+b.quantity+'</b><p class="hint">'+(b.steps.map(s=>s.title).join(' ← ')||'אין שלבי עבודה מוגדרים')+'</p><select onchange="setBatch(\''+b.id+'\',this.value)">'+['מתוכננת','בייצור','מוכנה'].map(x=>'<option '+(b.status===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>').join('')+
