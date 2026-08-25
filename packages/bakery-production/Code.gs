@@ -48,15 +48,16 @@ function setupBakeFlow() {
 function getAppData() {
   const ss = getSpreadsheet_();
   assertSetup_(ss);
-  // Demo mode is intentionally fixed: the three showcase products and their BOM are always available.
-  loadBakeryDemoData_(ss, true);
+  // The showcase catalog is intentionally returned directly from code.
+  // This keeps the demo visible even if a Sheet was created or linked incorrectly.
+  const demo = demoCatalog_();
   const orders = getOrders_().filter(o => o.status !== 'נמסרה');
   const batches = rows_(ss, BF.SHEETS.BATCHES).map(rowToBatch_);
   const counts = BF.STATUS.reduce((acc, status) => (acc[status] = orders.filter(o => o.status === status).length, acc), {});
   return {
     dashboard: { openOrders: orders.length, production: batches.filter(b => b.status === 'בייצור').length,
       packing: orders.filter(o => o.status === 'מוכנה לאריזה').length, counts },
-    products: products_(), ingredients: ingredients_(), customers: customers_(), orders: getOrders_(), plans: rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).reverse(), recipeMedia: recipeMedia_(), recipeIngredients: recipeIngredients_()
+    products: demo.products, ingredients: demo.ingredients, customers: customers_(), orders: getOrders_(), plans: rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).reverse(), recipeMedia: recipeMedia_(), recipeIngredients: demo.recipeIngredients
   };
 }
 
@@ -238,3 +239,27 @@ function indexBy_(arr,key) { return arr.reduce((m,x)=>(m[x[key]]=x,m),{}); }
 function clean_(x) { return String(x || '').trim(); }
 function formatDate_(d) { return d ? Utilities.formatDate(new Date(d), Session.getScriptTimeZone() || 'Asia/Jerusalem', 'yyyy-MM-dd') : ''; }
 function endOfDay_(d) { d.setHours(23,59,59,999); return d; }
+
+function demoCatalog_() {
+  const products=[
+    {id:'P-CHOC',name:'עוגת שמרים שוקולד',category:'עוגות שמרים',unit:'עוגה',salePrice:95},
+    {id:'P-CHEESE',name:'עוגת גבינה פירורים',category:'עוגות גבינה',unit:'עוגה',salePrice:125},
+    {id:'P-COOKIE',name:'מארז עוגיות חמאה',category:'מארזים',unit:'מארז',salePrice:65}
+  ];
+  const ingredients=[
+    {id:'I-FLOUR',name:'קמח',unit:'ק״ג',cost:6.5},{id:'I-YEAST',name:'שמרים יבשים',unit:'ק״ג',cost:48},
+    {id:'I-SUGAR',name:'סוכר',unit:'ק״ג',cost:5.8},{id:'I-EGG',name:'ביצים',unit:'יח׳',cost:1.1},
+    {id:'I-BUTTER',name:'חמאה',unit:'ק״ג',cost:38},{id:'I-MILK',name:'חלב',unit:'ליטר',cost:7},
+    {id:'I-CHOC',name:'שוקולד מריר',unit:'ק״ג',cost:43},{id:'I-CHEESE',name:'גבינת שמנת',unit:'ק״ג',cost:31},
+    {id:'I-BISCUIT',name:'ביסקוויטים',unit:'ק״ג',cost:24},{id:'I-CREAM',name:'שמנת חמוצה',unit:'ק״ג',cost:18},
+    {id:'I-VANILLA',name:'תמצית וניל',unit:'ליטר',cost:160},{id:'I-BAKING',name:'אבקת אפייה',unit:'ק״ג',cost:24}
+  ];
+  const bom=[
+    ['P-CHOC','I-FLOUR',0.50],['P-CHOC','I-YEAST',0.012],['P-CHOC','I-SUGAR',0.10],['P-CHOC','I-EGG',2],['P-CHOC','I-BUTTER',0.12],['P-CHOC','I-MILK',0.18],['P-CHOC','I-CHOC',0.20],
+    ['P-CHEESE','I-BISCUIT',0.25],['P-CHEESE','I-BUTTER',0.12],['P-CHEESE','I-CHEESE',0.75],['P-CHEESE','I-SUGAR',0.18],['P-CHEESE','I-EGG',5],['P-CHEESE','I-CREAM',0.20],['P-CHEESE','I-VANILLA',0.006],
+    ['P-COOKIE','I-FLOUR',0.35],['P-COOKIE','I-BUTTER',0.22],['P-COOKIE','I-SUGAR',0.15],['P-COOKIE','I-EGG',1],['P-COOKIE','I-VANILLA',0.004],['P-COOKIE','I-BAKING',0.008]
+  ];
+  const index=indexBy_(ingredients,'id');
+  const recipeIngredients=bom.map((r,i)=>({rowNumber:i+2,productId:r[0],ingredientId:r[1],name:index[r[1]].name,unit:index[r[1]].unit,quantity:r[2],unitCost:index[r[1]].cost,cost:r[2]*index[r[1]].cost}));
+  return {products,ingredients,recipeIngredients};
+}
