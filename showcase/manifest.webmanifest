@@ -1,0 +1,12 @@
+{
+  "name": "FlowPage Studio",
+  "short_name": "FlowPage",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f6f2",
+  "theme_color": "#1b2321",
+  "icons": [
+    { "src": "assets/branding/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "assets/branding/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
