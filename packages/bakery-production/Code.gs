@@ -41,23 +41,38 @@ function setupBakeFlow() {
   schemas[BF.SHEETS.PLANS] = ['מזהה תוכנית','מתאריך','עד תאריך','נוצר בתאריך','סטטוס'];
   schemas[BF.SHEETS.BATCHES] = ['מזהה אצווה','מזהה תוכנית','מזהה מוצר','כמות מתוכננת','סטטוס'];
   Object.keys(schemas).forEach(name => ensureSheet_(ss, name, schemas[name]));
-  seedDemoData_(ss);
-  return {ok: true, message: 'BakeFlow הוקמה בהצלחה. נתוני הדגמה נוספו לגיליונות.', spreadsheetUrl: ss.getUrl()};
+  installStarterDataOnce_(ss);
+  return {ok: true, message: 'BakeFlow הוקמה בהצלחה. נתוני הפתיחה נשמרו בגיליונות.', spreadsheetUrl: ss.getUrl()};
 }
 
 function getAppData() {
   const ss = getSpreadsheet_();
   assertSetup_(ss);
-  // The showcase catalog is intentionally returned directly from code.
-  // This keeps the demo visible even if a Sheet was created or linked incorrectly.
-  const demo = demoCatalog_();
+  const products = products_();
+  const ingredients = ingredients_();
   const orders = getOrders_().filter(o => o.status !== 'נמסרה');
   const batches = rows_(ss, BF.SHEETS.BATCHES).map(rowToBatch_);
   const counts = BF.STATUS.reduce((acc, status) => (acc[status] = orders.filter(o => o.status === status).length, acc), {});
   return {
     dashboard: { openOrders: orders.length, production: batches.filter(b => b.status === 'בייצור').length,
       packing: orders.filter(o => o.status === 'מוכנה לאריזה').length, counts },
-    products: demo.products, ingredients: demo.ingredients, customers: customers_(), orders: getOrders_(), plans: rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).reverse(), recipeMedia: recipeMedia_(), recipeIngredients: demo.recipeIngredients
+    products, ingredients, customers: customers_(), orders: getOrders_(), plans: rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).reverse(), recipeMedia: recipeMedia_(), recipeIngredients: recipeIngredients_()
+  };
+}
+
+/** Diagnostic endpoint: verifies that the app is reading its live spreadsheet. */
+function getDataLayerStatus() {
+  const ss = getSpreadsheet_();
+  assertSetup_(ss);
+  const count = name => rows_(ss, name).length;
+  return {
+    ok: true,
+    spreadsheetUrl: ss.getUrl(),
+    counts: {
+      customers: count(BF.SHEETS.CUSTOMERS), products: count(BF.SHEETS.PRODUCTS),
+      ingredients: count(BF.SHEETS.INGREDIENTS), bomLines: count(BF.SHEETS.RECIPES),
+      orders: count(BF.SHEETS.ORDERS)
+    }
   };
 }
 
@@ -141,8 +156,8 @@ function deleteRecipeIngredient(rowNumber) {
 
 function loadBakeryDemoData() {
   const ss = getSpreadsheet_(); assertSetup_(ss);
-  const added = loadBakeryDemoData_(ss, true);
-  return {ok:true, added};
+  installStarterDataOnce_(ss);
+  return {ok:true, message:'נתוני הפתיחה כבר קיימים בגיליונות. ניתן לערוך אותם שם או במערכת.'};
 }
 
 function uploadRecipeImage(payload) {
@@ -218,10 +233,60 @@ function ingredients_() { return rows_(getSpreadsheet_(), BF.SHEETS.INGREDIENTS)
 function recipeMedia_() { return rows_(getSpreadsheet_(), BF.SHEETS.RECIPE_MEDIA).map(r => ({id:r[0],productId:r[1],title:r[2],url:r[3],note:r[4],created:formatDate_(r[5])})); }
 function recipeIngredients_() { const ss=getSpreadsheet_(); const ingredients=indexBy_(ingredients_(), 'id'); const sh=ss.getSheetByName(BF.SHEETS.RECIPES); if (!sh || sh.getLastRow()<2) return []; return sh.getRange(2,1,sh.getLastRow()-1,sh.getLastColumn()).getValues().map((r,index) => ({rowNumber:index+2,productId:r[0],ingredientId:r[1],name:ingredients[r[1]]?.name || r[1],unit:ingredients[r[1]]?.unit || '',quantity:Number(r[2]),unitCost:Number(ingredients[r[1]]?.cost || 0),cost:Number(r[2]) * Number(ingredients[r[1]]?.cost || 0)})); }
 function ensureSheet_(ss,name,headers) { const sh = ss.getSheetByName(name) || ss.insertSheet(name); if (sh.getLastRow() === 0) { sh.appendRow(headers); sh.setFrozenRows(1); sh.getRange(1,1,1,headers.length).setBackground('#4a2c21').setFontColor('#ffffff').setFontWeight('bold'); sh.autoResizeColumns(1,headers.length); } else { const current=sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0]; headers.slice(current.length).forEach((header,index)=>sh.getRange(1,current.length+index+1).setValue(header)); } }
-function seedDemoData_(ss) {
-  if (rows_(ss, BF.SHEETS.PRODUCTS).length) return;
-  [['CUS-001','משפחת כהן','050-0000001','cohen@example.com','בית שמש','איסוף ביום שישי','כן'],['CUS-002','דנה לוי','050-0000002','dana@example.com','ירושלים','ללא אגוזים','כן']].forEach(r=>append_(ss,BF.SHEETS.CUSTOMERS,r));
-  loadBakeryDemoData_(ss);
+/**
+ * Installs the three showcase products into the spreadsheet only once.
+ * Afterwards these are ordinary spreadsheet rows: changing them in the UI or
+ * sheet will never be overwritten by a later setup run.
+ */
+function installStarterDataOnce_(ss) {
+  const props = PropertiesService.getScriptProperties();
+  const version = 'BAKEFLOW_STARTER_DATA_V2';
+  if (props.getProperty(version)) return;
+
+  if (!rows_(ss, BF.SHEETS.CUSTOMERS).length) {
+    [['CUS-001','משפחת כהן','050-0000001','cohen@example.com','בית שמש','איסוף ביום שישי','כן'],
+     ['CUS-002','דנה לוי','050-0000002','dana@example.com','ירושלים','ללא אגוזים','כן']]
+      .forEach(r => append_(ss, BF.SHEETS.CUSTOMERS, r));
+  }
+
+  const products = [
+    ['P-CHOC','עוגת שמרים שוקולד','עוגה',43,90,'כן',95,'עוגות שמרים'],
+    ['P-CHEESE','עוגת גבינה פירורים','עוגה',55,80,'כן',125,'עוגות גבינה'],
+    ['P-COOKIE','מארז עוגיות חמאה','מארז',25,45,'כן',65,'מארזים']
+  ];
+  const ingredients = [
+    ['I-FLOUR','קמח','ק״ג',6.5,'ספק אפייה'], ['I-YEAST','שמרים יבשים','ק״ג',48,'ספק אפייה'],
+    ['I-SUGAR','סוכר','ק״ג',5.8,'ספק אפייה'], ['I-EGG','ביצים','יח׳',1.1,'מכולת'],
+    ['I-BUTTER','חמאה','ק״ג',38,'מחלבה'], ['I-MILK','חלב','ליטר',7,'מכולת'],
+    ['I-CHOC','שוקולד מריר','ק״ג',43,'ספק אפייה'], ['I-CHEESE','גבינת שמנת','ק״ג',31,'מחלבה'],
+    ['I-BISCUIT','ביסקוויטים','ק״ג',24,'ספק אפייה'], ['I-CREAM','שמנת חמוצה','ק״ג',18,'מחלבה'],
+    ['I-VANILLA','תמצית וניל','ליטר',160,'ספק אפייה'], ['I-BAKING','אבקת אפייה','ק״ג',24,'ספק אפייה']
+  ];
+  const bom = [
+    ['P-CHOC','I-FLOUR',0.50], ['P-CHOC','I-YEAST',0.012], ['P-CHOC','I-SUGAR',0.10], ['P-CHOC','I-EGG',2], ['P-CHOC','I-BUTTER',0.12], ['P-CHOC','I-MILK',0.18], ['P-CHOC','I-CHOC',0.20],
+    ['P-CHEESE','I-BISCUIT',0.25], ['P-CHEESE','I-BUTTER',0.12], ['P-CHEESE','I-CHEESE',0.75], ['P-CHEESE','I-SUGAR',0.18], ['P-CHEESE','I-EGG',5], ['P-CHEESE','I-CREAM',0.20], ['P-CHEESE','I-VANILLA',0.006],
+    ['P-COOKIE','I-FLOUR',0.35], ['P-COOKIE','I-BUTTER',0.22], ['P-COOKIE','I-SUGAR',0.15], ['P-COOKIE','I-EGG',1], ['P-COOKIE','I-VANILLA',0.004], ['P-COOKIE','I-BAKING',0.008]
+  ];
+  products.forEach(r => upsertById_(ss, BF.SHEETS.PRODUCTS, r));
+  ingredients.forEach(r => upsertById_(ss, BF.SHEETS.INGREDIENTS, r));
+  replaceBomForProducts_(ss, ['P-CHOC','P-CHEESE','P-COOKIE'], bom);
+  props.setProperty(version, new Date().toISOString());
+}
+
+function upsertById_(ss, sheetName, row) {
+  const sh = ss.getSheetByName(sheetName);
+  const values = sh.getDataRange().getValues();
+  const index = values.findIndex((r, i) => i > 0 && r[0] === row[0]);
+  if (index < 0) sh.appendRow(row);
+  else sh.getRange(index + 1, 1, 1, row.length).setValues([row]);
+}
+
+function replaceBomForProducts_(ss, productIds, bom) {
+  const sh = ss.getSheetByName(BF.SHEETS.RECIPES);
+  const selected = productIds.reduce((set, id) => (set[id] = true, set), {});
+  const values = sh.getDataRange().getValues();
+  for (let i = values.length - 1; i >= 1; i--) if (selected[values[i][0]]) sh.deleteRow(i + 1);
+  if (bom.length) sh.getRange(sh.getLastRow() + 1, 1, bom.length, 3).setValues(bom);
 }
 function loadBakeryDemoData_(ss, replaceDemoRecipes) {
   const products=[['P-CHOC','עוגת שוקולד חגיגית','עוגה',42,55,'כן',120,'עוגות'],['P-CHEESE','עוגת גבינה אפויה','עוגה',54,75,'כן',145,'עוגות'],['P-COOKIE','מארז עוגיות חמאה','מארז',28,40,'כן',75,'מארזים']];
