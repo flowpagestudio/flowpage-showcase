@@ -209,7 +209,7 @@ function setOrderStatus(orderId, status) {
 
 function getOrders_() {
   const ss = getSpreadsheet_(); const lines = rows_(ss, BF.SHEETS.ORDER_LINES); const products = indexBy_(products_(), 'id');
-  return rows_(ss, BF.SHEETS.ORDERS).map(r => ({id:r[0], created:r[1], customer:r[2], phone:r[3], deliveryDate:formatDate_(r[4]), status:r[5], notes:r[6],
+  return rows_(ss, BF.SHEETS.ORDERS).map(r => ({id:r[0], created:formatDate_(r[1]), customer:r[2], phone:r[3], deliveryDate:formatDate_(r[4]), status:r[5], notes:r[6],
     lines: lines.filter(l => l[0] === r[0]).map(l => ({productId:l[1], productName:products[l[1]]?.name || l[1], quantity:Number(l[2]), packingNote:l[3] || ''}))})).reverse();
 }
 function customers_() { return rows_(getSpreadsheet_(), BF.SHEETS.CUSTOMERS).filter(r => String(r[6]).toLowerCase() !== 'לא').map(r => ({id:r[0],name:r[1],phone:r[2],email:r[3],address:r[4],notes:r[5]})); }
