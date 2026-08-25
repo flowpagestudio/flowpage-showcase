@@ -1,7 +1,8 @@
 const BF = {
   SHEETS: {
     CUSTOMERS: 'לקוחות', PRODUCTS: 'מוצרים', INGREDIENTS: 'חומרי גלם', RECIPES: 'מתכונים', STEPS: 'שלבי עבודה', RECIPE_MEDIA: 'מדיה למתכונים',
-    ORDERS: 'הזמנות', ORDER_LINES: 'שורות הזמנה', PLANS: 'תוכניות ייצור', BATCHES: 'אצוות ייצור'
+    ORDERS: 'הזמנות', ORDER_LINES: 'שורות הזמנה', PLANS: 'תוכניות ייצור', BATCHES: 'אצוות ייצור',
+    SHOPPING: 'רשימת קניות', PACKING: 'משימות אריזה'
   },
   STATUS: ['ממתינה', 'מתוכננת', 'בייצור', 'מוכנה לאריזה', 'מוכנה למסירה', 'נמסרה']
 };
@@ -40,6 +41,8 @@ function setupBakeFlow() {
   schemas[BF.SHEETS.ORDER_LINES] = ['מזהה הזמנה','מזהה מוצר','כמות','הערת אריזה'];
   schemas[BF.SHEETS.PLANS] = ['מזהה תוכנית','מתאריך','עד תאריך','נוצר בתאריך','סטטוס'];
   schemas[BF.SHEETS.BATCHES] = ['מזהה אצווה','מזהה תוכנית','מזהה מוצר','כמות מתוכננת','סטטוס'];
+  schemas[BF.SHEETS.SHOPPING] = ['מזהה קנייה','מזהה תוכנית','מזהה חומר','כמות נדרשת','עלות משוערת','סטטוס'];
+  schemas[BF.SHEETS.PACKING] = ['מזהה אריזה','מזהה תוכנית','מזהה הזמנה','מזהה מוצר','כמות','סטטוס'];
   Object.keys(schemas).forEach(name => ensureSheet_(ss, name, schemas[name]));
   installStarterDataOnce_(ss);
   return {ok: true, message: 'BakeFlow הוקמה בהצלחה. נתוני הפתיחה נשמרו בגיליונות.', spreadsheetUrl: ss.getUrl()};
@@ -71,7 +74,7 @@ function getDataLayerStatus() {
     counts: {
       customers: count(BF.SHEETS.CUSTOMERS), products: count(BF.SHEETS.PRODUCTS),
       ingredients: count(BF.SHEETS.INGREDIENTS), bomLines: count(BF.SHEETS.RECIPES),
-      orders: count(BF.SHEETS.ORDERS)
+      orders: count(BF.SHEETS.ORDERS), shoppingTasks: count(BF.SHEETS.SHOPPING), packingTasks: count(BF.SHEETS.PACKING)
     }
   };
 }
@@ -290,6 +293,7 @@ function createProductionPlan(fromDate, toDate) {
   const planId = 'PLAN-' + Utilities.getUuid().slice(0, 8).toUpperCase();
   append_(ss, BF.SHEETS.PLANS, [planId, fromDate, toDate, new Date(), 'פעילה']);
   Object.keys(totals).forEach(productId => append_(ss, BF.SHEETS.BATCHES, ['BAT-' + Utilities.getUuid().slice(0,8).toUpperCase(), planId, productId, totals[productId], 'מתוכננת']));
+  createPlanTasks_(ss, planId, totals, relevant);
   relevant.forEach(o => updateOrderStatus_(ss, o.id, 'מתוכננת'));
   return getPlanDetails(planId);
 }
@@ -298,8 +302,8 @@ function getPlanDetails(planId) {
   const ss = getSpreadsheet_(); assertSetup_(ss);
   const plan = rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).find(p => p.id === planId) || rows_(ss, BF.SHEETS.PLANS).map(rowToPlan_).slice(-1)[0];
   if (!plan) return null;
-  const products = indexBy_(products_(), 'id');
-  const ingredients = indexBy_(ingredients_(), 'id');
+  const products = indexBy_(products_(true), 'id');
+  const ingredients = indexBy_(ingredients_(true), 'id');
   const recipeRows = rows_(ss, BF.SHEETS.RECIPES);
   const steps = rows_(ss, BF.SHEETS.STEPS);
   const batches = rows_(ss, BF.SHEETS.BATCHES).map(rowToBatch_).filter(b => b.planId === plan.id).map(b => {
@@ -312,8 +316,27 @@ function getPlanDetails(planId) {
   });
   const shoppingMap = {};
   batches.forEach(b => b.recipe.forEach(i => { const k = i.name + '|' + i.unit; if (!shoppingMap[k]) shoppingMap[k] = {...i}; else { shoppingMap[k].quantity += i.quantity; shoppingMap[k].cost += i.cost; }}));
-  const orders = getOrders_().filter(o => { const d = new Date(o.deliveryDate); return d >= new Date(plan.from) && d <= endOfDay_(new Date(plan.to)) && o.status !== 'נמסרה'; });
-  return {plan, batches, shopping: Object.values(shoppingMap).sort((a,b)=>a.name.localeCompare(b.name)), totalCost: Object.values(shoppingMap).reduce((s,i)=>s+i.cost,0), packing: orders};
+  const shoppingTasks = rows_(ss, BF.SHEETS.SHOPPING).filter(r => r[1] === plan.id).map((r, index) => ({rowNumber:index + 2,id:r[0],ingredientId:r[2],name:ingredients[r[2]]?.name || r[2],unit:ingredients[r[2]]?.unit || '',quantity:Number(r[3]),cost:Number(r[4]),status:r[5] || 'נדרש'}));
+  const packingTasks = rows_(ss, BF.SHEETS.PACKING).filter(r => r[1] === plan.id).map((r, index) => ({rowNumber:index + 2,id:r[0],orderId:r[2],productId:r[3],productName:products[r[3]]?.name || r[3],quantity:Number(r[4]),status:r[5] || 'ממתין'}));
+  const orders = getOrders_().filter(o => packingTasks.some(task => task.orderId === o.id));
+  const shopping = shoppingTasks.length ? shoppingTasks : Object.values(shoppingMap).sort((a,b)=>a.name.localeCompare(b.name));
+  const totalCost = shopping.reduce((sum, item) => sum + Number(item.cost || 0), 0);
+  return {plan, batches, shopping, shoppingTasks, packingTasks, totalCost, packing: orders};
+}
+
+function createPlanTasks_(ss, planId, totals, orders) {
+  const ingredients = indexBy_(ingredients_(true), 'id');
+  const shopping = {};
+  rows_(ss, BF.SHEETS.RECIPES).forEach(r => {
+    const units = Number(totals[r[0]] || 0);
+    if (!units) return;
+    const quantity = Number(r[2]) * units;
+    if (!shopping[r[1]]) shopping[r[1]] = {quantity:0, cost:0};
+    shopping[r[1]].quantity += quantity;
+    shopping[r[1]].cost += quantity * Number(ingredients[r[1]]?.cost || 0);
+  });
+  Object.keys(shopping).forEach(ingredientId => append_(ss, BF.SHEETS.SHOPPING, ['BUY-' + Utilities.getUuid().slice(0,8).toUpperCase(), planId, ingredientId, shopping[ingredientId].quantity, shopping[ingredientId].cost, 'נדרש']));
+  orders.forEach(order => order.lines.forEach(line => append_(ss, BF.SHEETS.PACKING, ['PACK-' + Utilities.getUuid().slice(0,8).toUpperCase(), planId, order.id, line.productId, line.quantity, 'ממתין'])));
 }
 
 function setBatchStatus(batchId, status) {
@@ -322,6 +345,27 @@ function setBatchStatus(batchId, status) {
   const row = values.findIndex((r,i) => i && r[0] === batchId); if (row < 1) throw new Error('האצווה לא נמצאה.');
   sh.getRange(row + 1, 5).setValue(status);
   return {ok:true};
+}
+
+function setShoppingStatus(taskId, status) {
+  if (!['נדרש','נרכש'].includes(status)) throw new Error('סטטוס קנייה לא תקין.');
+  const ss = getSpreadsheet_(); assertSetup_(ss);
+  const row = findRowById_(ss, BF.SHEETS.SHOPPING, taskId);
+  ss.getSheetByName(BF.SHEETS.SHOPPING).getRange(row, 6).setValue(status);
+  return {ok:true};
+}
+
+function setPackingStatus(taskId, status) {
+  if (!['ממתין','נארז'].includes(status)) throw new Error('סטטוס אריזה לא תקין.');
+  const ss = getSpreadsheet_(); assertSetup_(ss);
+  const row = findRowById_(ss, BF.SHEETS.PACKING, taskId);
+  const sh = ss.getSheetByName(BF.SHEETS.PACKING);
+  sh.getRange(row, 6).setValue(status);
+  const task = sh.getRange(row, 1, 1, 6).getValues()[0];
+  const orderId = task[2];
+  const allPacked = rows_(ss, BF.SHEETS.PACKING).filter(r => r[2] === orderId).every(r => r[5] === 'נארז');
+  if (allPacked) updateOrderStatus_(ss, orderId, 'מוכנה למסירה');
+  return {ok:true, orderReady:allPacked};
 }
 
 function setOrderStatus(orderId, status) {
