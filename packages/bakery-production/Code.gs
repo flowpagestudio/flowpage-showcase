@@ -61,6 +61,17 @@ function getAppData() {
   };
 }
 
+function getAppDataSafe() {
+  try {
+    return {ok:true, data:getAppData()};
+  } catch (error) {
+    let spreadsheet = '';
+    let sheets = [];
+    try { const ss=getSpreadsheet_(); spreadsheet=ss.getUrl(); sheets=ss.getSheets().map(sh=>sh.getName()); } catch (ignored) {}
+    return {ok:false, error:String(error && error.message ? error.message : error), spreadsheet, sheets};
+  }
+}
+
 function saveOrder(payload) {
   const ss = getSpreadsheet_(); assertSetup_(ss);
   if (!payload || !payload.customer || !payload.deliveryDate || !payload.lines || !payload.lines.length) throw new Error('יש למלא לקוח, תאריך מסירה ולפחות פריט אחד.');
