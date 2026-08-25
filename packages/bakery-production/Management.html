@@ -56,5 +56,15 @@ function dashboard(){
   '</section><section class="card"><div class="section-head"><h2>הזמנות אחרונות</h2><button class="secondary" onclick="go(\'orders\')">ניהול הזמנות</button></div>'+ordersTable(open.slice(0,5),true)+'</section>';
 }
 async function quickOrderStatus(id,status){if(!status)return;await run('setOrderStatus',id,status);render()}
+function planHtml(d){
+  const buy=d.shoppingTasks||d.shopping||[], pack=d.packingTasks||[];
+  return '<div class="plan-detail"><h3>רכש · עלות משוערת '+money(d.totalCost)+'</h3>'+
+  (buy.length?buy.map(i=>'<div class="bom-line"><span><b>'+esc(i.name)+'</b><br><small>'+Number(i.quantity).toFixed(3)+' '+esc(i.unit)+' · '+money(i.cost)+'</small></span>'+(i.id?'<select onchange="setShopping(\''+i.id+'\',this.value)">'+['נדרש','נרכש'].map(x=>'<option '+(i.status===x?'selected':'')+'>'+x+'</option>').join('')+'</select>':'')+'</div>').join(''):'<p class="empty">אין רכיבים לרכש.</p>')+
+  '<h3 style="margin-top:20px">תוכנית עבודה</h3>'+d.batches.map(b=>'<div class="card" style="margin:8px 0;padding:12px"><b>'+esc(b.productName)+' × '+b.quantity+'</b><p class="hint">'+(b.steps.map(s=>s.title).join(' ← ')||'אין שלבי עבודה מוגדרים')+'</p><select onchange="setBatch(\''+b.id+'\',this.value)">'+['מתוכננת','בייצור','מוכנה'].map(x=>'<option '+(b.status===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>').join('')+
+  '<h3 style="margin-top:20px">אריזה ומסירה</h3>'+
+  (pack.length?pack.map(t=>'<div class="bom-line"><span><b>'+esc(t.productName)+' × '+t.quantity+'</b><br><small>הזמנה '+esc(t.orderId)+'</small></span><select onchange="setPacking(\''+t.id+'\',this.value)">'+['ממתין','נארז'].map(x=>'<option '+(t.status===x?'selected':'')+'>'+x+'</option>').join('')+'</select></div>').join(''):'<p class="empty">אין משימות אריזה בתוכנית זו.</p>')+'</div>';
+}
+async function setShopping(id,status){await run('setShoppingStatus',id,status);planDetails=await call('getPlanDetails',planDetails.plan.id);render()}
+async function setPacking(id,status){const r=await run('setPackingStatus',id,status);planDetails=await call('getPlanDetails',planDetails.plan.id);render();if(r.orderReady)toast('כל פריטי ההזמנה נארזו — ההזמנה מוכנה למסירה.')}
 loadData();
 </script></body></html>
