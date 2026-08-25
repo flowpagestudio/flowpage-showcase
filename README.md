@@ -13,7 +13,7 @@ flowpage-showcase/
     projects/
       technician/           ← case 01 demo (+ management stub)
       pedicure-manicure/    ← case 02 demo
-      architecture/         ← case 03 demo
+      architecture/         ← case 03 BakeFlow showcase
   packages/                 ← Google Apps Script copy kits (manual paste)
     computer-technician/    ← live kit (Code.gs + Index + Management)
     pedicure-manicure/      ← placeholder
@@ -41,7 +41,7 @@ Each business system is its own package. The main page only **links** to demos; 
 |---|---|
 | `showcase/projects/technician/` | `packages/computer-technician/` |
 | `showcase/projects/pedicure-manicure/` | `packages/pedicure-manicure/` (todo) |
-| `showcase/projects/architecture/` | `packages/architecture/` (todo) |
+| `showcase/projects/architecture/` | `packages/bakery-production/` |
 
 ## GitHub Pages
 
