@@ -9,8 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../style.css">
   <link rel="stylesheet" href="pedicure-manicure.css">
+  <link rel="stylesheet" href="flowpage-nav.css">
 </head>
-<body class="beauty">
+<body class="beauty" data-flowpage-project="pedicure">
 <main>
   <nav class="nav"><a class="logo" href="../../">FLOW<span>PAGE</span><small>STUDIO</small></a><a class="nav-link" href="#booking">קביעת תור</a></nav>
   <section class="beauty-hero">
@@ -34,4 +35,5 @@
   <section class="policy"><strong>שינוי או ביטול תור</strong><p>אפשר עד 48 שעות לפני המועד שנקבע.</p></section>
 </main><footer>DEMO PROJECT · FLOWPAGE STUDIO · 2026</footer>
 <script>let day='',time='';const s=document.querySelector('#status'),t=document.querySelector('#treatment');document.querySelectorAll('.days button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.days button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');day=b.dataset.day;s.textContent='נבחר: '+day+'. עכשיו בחרי שעה.'});document.querySelectorAll('.times button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.times button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');time=b.textContent;s.textContent=day?'נבחר: '+day+' בשעה '+time+'.':'בחרי גם יום.'});document.querySelector('#confirm').onclick=()=>{if(!t.value||!day||!time){s.textContent='כדי לאשר צריך לבחור טיפול, יום ושעה.';return}document.querySelector('#summary').textContent=t.value+' · יום '+day+' · '+time;document.querySelector('#confirmation').hidden=false;document.querySelector('#confirmation').scrollIntoView({behavior:'smooth'})}</script>
+<script src="flowpage-nav.js"></script>
 </body></html>
