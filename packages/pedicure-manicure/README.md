@@ -1,15 +1,14 @@
-# Package placeholder — Pedicure & Manicure
+# פדיקור ומניקור — מערכת תורים וניהול
 
-Apps Script copy kit for project 02. Not built yet.
+חבילת Apps Script מלאה עבור הפרויקט השני של FlowPage Studio.
 
-When ready, this folder should contain the same shape as `../computer-technician/`:
-
-| File | Role |
+| קובץ | תפקיד |
 |---|---|
-| `Code.gs` | Server logic |
-| `Index.html` | Public booking / lead page |
-| `Management.html` | Owner system page (optional until needed) |
-| `appsscript.json` | Manifest |
-| `COPY-TO-APPS-SCRIPT.md` | Manual paste checklist |
+| `Code.gs` | לוגיקת תורים, יומן, התראות, גלריה וניהול |
+| `Index.html` | דף קביעת תור חי |
+| `Management.html` | מסך ניהול לבעלת העסק |
+| `appsscript.json` | הגדרות הפרויקט |
+| `COPY-TO-APPS-SCRIPT.md` | מדריך הקמה והדבקה ידנית |
 
-Showcase demo (portfolio only): `../../showcase/projects/pedicure-manicure/`
+הדגמת Pages נשארת כאן: `../../showcase/projects/pedicure-manicure/`.
+לאחר הפריסה מחברים אליה את כתובת ה־Web App.
