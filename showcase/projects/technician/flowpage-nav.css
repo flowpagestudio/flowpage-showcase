@@ -1,0 +1,95 @@
+/* FlowPage Studio | shared project navigation */
+:root {
+  --flowpage-ink: #172033;
+  --flowpage-surface: rgba(255, 255, 255, 0.94);
+  --flowpage-line: rgba(23, 32, 51, 0.10);
+  --flowpage-muted: #697386;
+}
+
+body {
+  padding-top: 86px;
+}
+
+.flowpage-nav {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  right: 0;
+  left: 0;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px clamp(16px, 4vw, 56px);
+  background: var(--flowpage-surface);
+  border-bottom: 1px solid var(--flowpage-line);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-sizing: border-box;
+}
+
+.flowpage-nav__brand {
+  flex: 0 0 auto;
+  color: var(--flowpage-ink);
+  font: 800 15px/1.1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.flowpage-nav__brand span { color: #175CFF; }
+
+.flowpage-nav__links {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.flowpage-nav__links::-webkit-scrollbar { display: none; }
+
+.flowpage-nav__item {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  width: 74px;
+  min-height: 52px;
+  padding: 5px 4px;
+  color: var(--flowpage-ink);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  font: 700 10px/1.05 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-decoration: none;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+  white-space: nowrap;
+}
+
+.flowpage-nav__item:hover { background: #F2F5FA; transform: translateY(-1px); }
+.flowpage-nav__item[aria-current="page"] { background: #EEF3FF; border-color: #C6D6FF; }
+.flowpage-nav__icon { width: 27px; height: 27px; }
+
+.flowpage-nav__info {
+  flex: 0 0 auto;
+  color: var(--flowpage-muted);
+  font: 650 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.flowpage-nav__info:hover { color: var(--flowpage-ink); }
+
+@media (max-width: 640px) {
+  body { padding-top: 70px; }
+  .flowpage-nav { min-height: 60px; gap: 10px; padding: 8px 12px; }
+  .flowpage-nav__brand { font-size: 13px; }
+  .flowpage-nav__brand span { display: none; }
+  .flowpage-nav__item { width: 65px; min-height: 48px; padding: 4px 2px; font-size: 9px; }
+  .flowpage-nav__icon { width: 25px; height: 25px; }
+  .flowpage-nav__info { display: none; }
+}
