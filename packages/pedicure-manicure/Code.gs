@@ -26,10 +26,10 @@ const BOOKING_HEADERS = ['מזהה', 'נוצר', 'שם', 'טלפון', 'אימי
 const GALLERY_HEADERS = ['מזהה', 'קטגוריה', 'כותרת', 'מזהה קובץ', 'כתובת תמונה', 'פעיל', 'עודכן'];
 const SETTINGS_HEADERS = ['מפתח', 'ערך'];
 const GALLERY_SEED = [
-  ['gallery-1', 'פדיקור', 'פדיקור טבעי', '', 'https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/pedicure-natural-v1.png', 'כן'],
-  ['gallery-2', 'מניקור', 'מניקור טבעי', '', 'https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/manicure-natural-v1.png', 'כן'],
-  ['gallery-3', 'בניית ציפורניים', 'מיקרו פרנץ׳', '', 'https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/nail-building-micro-french-v1.png', 'כן'],
-  ['gallery-4', 'לק ג׳ל', 'ורוד אבקתי', '', 'https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/gel-polish-dusty-rose-v1.png', 'כן']
+  ['gallery-1', 'פדיקור', 'פדיקור טבעי', '', 'https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/pedicure-natural-v1.png', 'כן', ''],
+  ['gallery-2', 'מניקור', 'מניקור טבעי', '', 'https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/manicure-natural-v1.png', 'כן', ''],
+  ['gallery-3', 'בניית ציפורניים', 'מיקרו פרנץ׳', '', 'https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/nail-building-micro-french-v1.png', 'כן', ''],
+  ['gallery-4', 'לק ג׳ל', 'ורוד אבקתי', '', 'https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/gel-polish-dusty-rose-v1.png', 'כן', '']
 ];
 
 function doGet(e) {
@@ -126,7 +126,7 @@ function updateAppointmentStatus(pin, id, status) {
   return { ok:true };
 }
 
-function getGalleryData(pin) { assertPin_(pin); return galleryRows_(); }
+function getGalleryData(pin) { assertPin_(pin); ensureGalleryData_(); return galleryRows_(); }
 function saveGalleryItem(pin, item) {
   assertPin_(pin); const sh = gallery_(), rows = sh.getDataRange().getValues(), i = rows.findIndex(function(r,n){return n && r[0] === item.id;});
   if (i < 1) throw new Error('פריט גלריה לא נמצא.');
@@ -141,13 +141,14 @@ function replaceGalleryImage(pin, id, file) {
   sh.getRange(i+1, 4, 1, 2).setValues([[saved.getId(), 'https://drive.google.com/thumbnail?id=' + saved.getId() + '&sz=w1600']]); sh.getRange(i+1, 7).setValue(new Date()); return galleryRows_();
 }
 function saveSettings(pin, values) { assertPin_(pin); ['OWNER_EMAIL','CALENDAR_ID'].forEach(function(k){if(values[k] != null) setSetting_(k, String(values[k]).trim());}); return getSettings_(); }
-function getPublicGallery() { return galleryRows_().filter(function(x){return x.active;}).map(function(x){return { category:x.category, title:x.title, url:x.url };}); }
+function getPublicGallery() { ensureGalleryData_(); return galleryRows_().filter(function(x){return x.active;}).map(function(x){return { category:x.category, title:x.title, url:x.url };}); }
 
 /* ---------- Data and helpers ---------- */
-function ensureData_() { const ss = ss_(); ensureSheet_(ss, 'תורים', BOOKING_HEADERS); ensureSheet_(ss, 'גלריה', GALLERY_HEADERS); ensureSheet_(ss, 'הגדרות', SETTINGS_HEADERS); if (!galleryRows_().length) { gallery_().getRange(2,1,GALLERY_SEED.length,6).setValues(GALLERY_SEED); } [['OWNER_EMAIL', props_().getProperty('OWNER_EMAIL') || ''],['CALENDAR_ID','primary']].forEach(function(x){if(getSetting_(x[0]) === null) setSetting_(x[0],x[1]);}); }
+function ensureData_() { const ss = ss_(); ensureSheet_(ss, 'תורים', BOOKING_HEADERS); ensureSheet_(ss, 'גלריה', GALLERY_HEADERS); ensureSheet_(ss, 'הגדרות', SETTINGS_HEADERS); ensureGalleryData_(); [['OWNER_EMAIL', props_().getProperty('OWNER_EMAIL') || ''],['CALENDAR_ID','primary']].forEach(function(x){if(getSetting_(x[0]) === null) setSetting_(x[0],x[1]);}); }
 function ensureSheet_(ss,name,headers) { let sh=ss.getSheetByName(name); if(!sh) sh=ss.insertSheet(name); if(sh.getLastRow()===0) sh.appendRow(headers); return sh; }
 function ss_(){ const id=props_().getProperty('SPREADSHEET_ID'); if(!id) throw new Error('יש להריץ setupProject() פעם אחת.'); return SpreadsheetApp.openById(id); }
 function bookings_(){return ss_().getSheetByName('תורים');} function gallery_(){return ss_().getSheetByName('גלריה');} function settings_(){return ss_().getSheetByName('הגדרות');} function props_(){return PropertiesService.getScriptProperties();}
+function ensureGalleryData_(){const sh=gallery_();if(sh.getDataRange().getValues().slice(1).some(function(row){return row[0];}))return;sh.getRange(2,1,GALLERY_SEED.length,GALLERY_HEADERS.length).setValues(GALLERY_SEED);sh.getRange(2,7,GALLERY_SEED.length,1).setValue(new Date());}
 function galleryRows_(){return gallery_().getDataRange().getValues().slice(1).filter(function(r){return r[0];}).map(function(r){return {id:String(r[0]),category:String(r[1]||''),title:String(r[2]||''),url:String(r[4]||''),active:r[5]===true||r[5]==='כן'};});}
 function getSetting_(key){const rows=settings_().getDataRange().getValues();for(let i=1;i<rows.length;i++)if(rows[i][0]===key)return rows[i][1];return null;} function setSetting_(key,val){const sh=settings_(),rows=sh.getDataRange().getValues(),i=rows.findIndex(function(r,n){return n&&r[0]===key;});if(i>0)sh.getRange(i+1,2).setValue(val);else sh.appendRow([key,val]);} function getSettings_(){return {OWNER_EMAIL:String(getSetting_('OWNER_EMAIL')||''),CALENDAR_ID:String(getSetting_('CALENDAR_ID')||'primary')};}
 function galleryFolder_(){const p=props_(),id=p.getProperty('GALLERY_FOLDER_ID');if(id)return DriveApp.getFolderById(id);const f=DriveApp.getFolderById(p.getProperty('ROOT_FOLDER_ID')).createFolder('גלריה');p.setProperty('GALLERY_FOLDER_ID',f.getId());return f;}
