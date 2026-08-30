@@ -6,7 +6,7 @@ window.FlowPageNavigation = {
   homeUrl: "https://flowpagestudio.github.io/flowpage-showcase/showcase/",
   computerUrl: "https://flowpagestudio.github.io/flowpage-showcase/showcase/projects/technician/",
   pedicureUrl: "https://flowpagestudio.github.io/flowpage-showcase/showcase/projects/pedicure-manicure/",
-  bakingUrl: "https://flowpagestudio.github.io/flowpage-showcase/showcase/projects/architecture/",
+  bakingUrl: "https://flowpagestudio.github.io/flowpage-showcase/showcase/projects/bakery-production/",
   assetBaseUrl: "https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/flowpage-navigation",
   infoText: "מערכות לדוגמה: אתר שירות, תהליך תפעולי וחיבור לכלי Google."
 };
