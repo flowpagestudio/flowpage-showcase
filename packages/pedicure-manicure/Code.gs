@@ -6,6 +6,9 @@
 const PM = {
   TZ: 'Asia/Jerusalem',
   BUSINESS: 'פדיקור ומניקור',
+  // Demo mode: the management screen opens directly from its private URL.
+  // Set to false before handing the system to a real business.
+  OPEN_MANAGEMENT: true,
   DAYS: [0, 1, 2, 3, 4], // Sun–Thu
   OPEN: 16 * 60,
   CLOSE: 21 * 60,
@@ -152,5 +155,5 @@ function calendar_(){const c=CalendarApp.getCalendarById(getSetting_('CALENDAR_I
 function validateBooking_(x){['fullName','phone','serviceId','date','time'].forEach(function(k){if(!String(x[k]||'').trim())throw new Error('חסר שדה: '+k);});if(x.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.email))throw new Error('כתובת המייל אינה תקינה.');}
 function parseDate_(x){if(!/^\d{4}-\d{2}-\d{2}$/.test(x||''))throw new Error('תאריך לא תקין.');const d=new Date(x+'T12:00:00');if(isNaN(d))throw new Error('תאריך לא תקין.');return d;} function parseDateTime_(d,t){if(!/^\d{2}:\d{2}$/.test(t||''))throw new Error('שעה לא תקינה.');return new Date(d+'T'+t+':00');} function assertBusinessDay_(d){if(PM.DAYS.indexOf(d.getDay())<0)throw new Error('העסק פתוח בימים א׳–ה׳ בלבד.');}
 function formatTime_(d){return Utilities.formatDate(d,PM.TZ,'HH:mm');} function formatDateTime_(d){return Utilities.formatDate(d,PM.TZ,'yyyy-MM-dd HH:mm');} function appointmentText_(n,p,e,s,d){return 'לקוחה: '+n+'\nטלפון: '+p+'\nאימייל: '+(e||'-')+'\nטיפול: '+s+'\nמועד: '+formatDateTime_(d);} function notifyOwner_(subject,body){const e=getSetting_('OWNER_EMAIL');if(e)GmailApp.sendEmail(e,subject,body);}
-function sha_(text){return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,text));} function assertPin_(pin){const expected=props_().getProperty('ADMIN_PIN_HASH');if(!expected)throw new Error('טרם הוגדר קוד ניהול. הריצו setAdminPin(...) בעורך Apps Script.');if(sha_(String(pin||''))!==expected)throw new Error('קוד הניהול שגוי.');}
+function sha_(text){return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,text));} function assertPin_(pin){if(PM.OPEN_MANAGEMENT)return true;const expected=props_().getProperty('ADMIN_PIN_HASH');if(!expected)throw new Error('טרם הוגדר קוד ניהול. הריצו setAdminPin(...) בעורך Apps Script.');if(sha_(String(pin||'')).toString()!==expected)throw new Error('קוד הניהול שגוי.');}
 function json_(obj,callback){const body=JSON.stringify(obj);return ContentService.createTextOutput(callback ? String(callback).replace(/[^A-Za-z0-9_$]/g,'')+'('+body+');':body).setMimeType(callback?ContentService.MimeType.JAVASCRIPT:ContentService.MimeType.JSON);}
