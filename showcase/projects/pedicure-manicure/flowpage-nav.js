@@ -19,9 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
   root.setAttribute("aria-label", "FlowPage Studio projects");
 
   var projects = [
-    { id: "computer", label: "Computer Flow", url: config.computerUrl, icon: config.assetBaseUrl + "/computer-flow.svg" },
-    { id: "pedicure", label: "Pedicure Flow", url: config.pedicureUrl, icon: config.assetBaseUrl + "/pedicure-flow.svg" },
-    { id: "baking", label: "Baking Flow", url: config.bakingUrl, icon: config.assetBaseUrl + "/baking-flow.svg" }
+    { id: "computer", label: "Computer Flow", url: config.computerUrl, icon: config.assetBaseUrl + "/computer-flow.png" },
+    { id: "pedicure", label: "Pedicure Flow", url: config.pedicureUrl, icon: config.assetBaseUrl + "/pedicure-flow.png" },
+    { id: "baking", label: "Baking Flow", url: config.bakingUrl, icon: config.assetBaseUrl + "/baking-flow.png" }
   ];
 
   root.innerHTML =
