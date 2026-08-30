@@ -13,11 +13,11 @@
 </head>
 <body class="beauty" data-flowpage-project="pedicure">
 <main>
-  <nav class="nav"><a class="logo" href="../../">FLOW<span>PAGE</span><small>STUDIO</small></a><a class="nav-link" href="#booking">קביעת תור</a></nav>
+  <nav class="nav"><a class="logo" href="../../">FLOW<span>PAGE</span><small>STUDIO</small></a><a class="nav-link" href="https://script.google.com/macros/s/AKfycbx4VaE6TprI0KAKSa-taA41zFu9Rafhj_LS7s9nMeqq2Nl4BrISIiU4QzqWnDwCOZmP/exec">קביעת תור</a></nav>
   <section class="beauty-hero">
     <p class="eyebrow">CASE 02 · BOOKING DEMO</p><h1>זמן קטן<br><em>שמגיע רק לך.</em></h1>
     <p>פדיקור, מניקור ובניית ציפורניים בירושלים. בוחרים טיפול, מועד פנוי — וסוגרים את זה.</p>
-    <a class="button beauty-btn" href="#booking">לקביעת תור <b>←</b></a>
+    <a class="button beauty-btn" href="https://script.google.com/macros/s/AKfycbx4VaE6TprI0KAKSa-taA41zFu9Rafhj_LS7s9nMeqq2Nl4BrISIiU4QzqWnDwCOZmP/exec">לקביעת תור <b>←</b></a>
   </section>
   <section class="treatments"><p class="eyebrow">הטיפולים</p><div class="treatment-grid">
     <article><span>01</span><h2>פדיקור רגיל</h2><p>40 דקות</p></article>
@@ -34,6 +34,6 @@
   </div></section>
   <section class="policy"><strong>שינוי או ביטול תור</strong><p>אפשר עד 48 שעות לפני המועד שנקבע.</p></section>
 </main><footer>DEMO PROJECT · FLOWPAGE STUDIO · 2026</footer>
-<script>let day='',time='';const s=document.querySelector('#status'),t=document.querySelector('#treatment');document.querySelectorAll('.days button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.days button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');day=b.dataset.day;s.textContent='נבחר: '+day+'. עכשיו בחרי שעה.'});document.querySelectorAll('.times button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.times button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');time=b.textContent;s.textContent=day?'נבחר: '+day+' בשעה '+time+'.':'בחרי גם יום.'});document.querySelector('#confirm').onclick=()=>{if(!t.value||!day||!time){s.textContent='כדי לאשר צריך לבחור טיפול, יום ושעה.';return}document.querySelector('#summary').textContent=t.value+' · יום '+day+' · '+time;document.querySelector('#confirmation').hidden=false;document.querySelector('#confirmation').scrollIntoView({behavior:'smooth'})}</script>
+<script>const FLOWPAGE_PEDICURE_WEBAPP='https://script.google.com/macros/s/AKfycbx4VaE6TprI0KAKSa-taA41zFu9Rafhj_LS7s9nMeqq2Nl4BrISIiU4QzqWnDwCOZmP/exec';let day='',time='';const s=document.querySelector('#status'),t=document.querySelector('#treatment');document.querySelectorAll('.days button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.days button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');day=b.dataset.day;s.textContent='נבחר: '+day+'. עכשיו בחרי שעה.'});document.querySelectorAll('.times button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.times button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');time=b.textContent;s.textContent=day?'נבחר: '+day+' בשעה '+time+'.':'בחרי גם יום.'});document.querySelector('#confirm').onclick=()=>{window.location.href=FLOWPAGE_PEDICURE_WEBAPP}</script>
 <script src="flowpage-nav.js"></script>
 </body></html>
