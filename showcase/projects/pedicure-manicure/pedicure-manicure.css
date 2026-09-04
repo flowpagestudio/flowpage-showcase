@@ -1,4 +1,10 @@
 .beauty-hero{position:relative;background:linear-gradient(90deg,rgba(255,248,245,.98),rgba(255,248,245,.76) 52%,rgba(255,248,245,.12)),url('https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/hero/pedicure-manicure-hero-v1.png') center/cover}
+.secondary-btn{background:rgba(255,255,255,.82);color:#432d35;border:1px solid rgba(67,45,53,.22)}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.story,.flow-section{max-width:1100px;margin:auto;padding:76px 24px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+.story p:last-child{font-size:20px;line-height:1.7;color:#806b72}
+.flow-section{display:block}.flow-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px}.flow-cards article{padding:24px;background:#fff;border:1px solid #ead9dc;border-radius:16px}.flow-cards span{color:#a6536e;font-weight:800}.flow-cards h3{margin:10px 0 4px}.flow-cards p{margin:0;color:#806b72}
+@media(max-width:700px){.story{grid-template-columns:1fr;padding:52px 20px}.flow-cards{grid-template-columns:1fr}.hero-actions{flex-direction:column;align-items:flex-start}}
 .beauty-gallery-grid{grid-template-columns:repeat(2,1fr)}
 .beauty-gallery-grid figure{position:relative;margin:0;aspect-ratio:1;overflow:hidden;border-radius:14px;background:#ead7d0}
 .beauty-gallery-grid img{width:100%;height:100%;display:block;object-fit:cover}

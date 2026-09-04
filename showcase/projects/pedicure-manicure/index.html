@@ -1,39 +1,9 @@
 <!doctype html>
-<html lang="he" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>פדיקור ומניקור | דוגמת FlowPage</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../style.css">
-  <link rel="stylesheet" href="pedicure-manicure.css">
-  <link rel="stylesheet" href="flowpage-nav.css">
-</head>
-<body class="beauty" data-flowpage-project="pedicure">
-<main>
-  <nav class="nav"><a class="logo" href="../../">FLOW<span>PAGE</span><small>STUDIO</small></a><a class="nav-link" href="https://script.google.com/macros/s/AKfycbx4VaE6TprI0KAKSa-taA41zFu9Rafhj_LS7s9nMeqq2Nl4BrISIiU4QzqWnDwCOZmP/exec">קביעת תור</a></nav>
-  <section class="beauty-hero">
-    <p class="eyebrow">CASE 02 · BOOKING DEMO</p><h1>זמן קטן<br><em>שמגיע רק לך.</em></h1>
-    <p>פדיקור, מניקור ובניית ציפורניים בירושלים. בוחרים טיפול, מועד פנוי — וסוגרים את זה.</p>
-    <a class="button beauty-btn" href="https://script.google.com/macros/s/AKfycbx4VaE6TprI0KAKSa-taA41zFu9Rafhj_LS7s9nMeqq2Nl4BrISIiU4QzqWnDwCOZmP/exec">לקביעת תור <b>←</b></a>
-  </section>
-  <section class="treatments"><p class="eyebrow">הטיפולים</p><div class="treatment-grid">
-    <article><span>01</span><h2>פדיקור רגיל</h2><p>40 דקות</p></article>
-    <article><span>02</span><h2>פדיקור ג'ל</h2><p>שעה וחצי</p></article>
-    <article><span>03</span><h2>מניקור</h2><p>40 דקות</p></article>
-    <article><span>04</span><h2>בניית ציפורניים</h2><p>שעה ועשרים</p></article>
-  </div></section>
-  <section id="booking" class="booking"><p class="eyebrow">קביעת תור</p><h2>בוחרים טיפול ומועד.</h2><p class="booking-note">זמינות: א׳–ה׳, 16:00–21:00 · חיץ פנימי של 5 דקות נשמר אוטומטית.</p><div class="booking-layout"><div><h3>1. טיפול</h3><select id="treatment"><option value="">בחירת טיפול</option><option>פדיקור רגיל — 40 דקות</option><option>פדיקור ג'ל — שעה וחצי</option><option>מניקור — 40 דקות</option><option>בניית ציפורניים — שעה ועשרים</option></select><h3>2. יום</h3><div class="days"><button data-day="ראשון">א׳<small>24.8</small></button><button data-day="שני">ב׳<small>25.8</small></button><button data-day="שלישי">ג׳<small>26.8</small></button><button data-day="רביעי">ד׳<small>27.8</small></button><button data-day="חמישי">ה׳<small>28.8</small></button></div></div><div><h3>3. שעה פנויה</h3><div class="times"><button>16:00</button><button>17:00</button><button>18:15</button><button>19:30</button><button>20:20</button></div><p class="status" id="status">בחרי טיפול, יום ושעה כדי להמשיך.</p><button class="button beauty-btn" id="confirm" type="button">אישור התור <b>←</b></button></div></div><div class="demo-confirm" id="confirmation" hidden><strong>התור נשמר בהדגמה.</strong><span id="summary"></span><small>במערכת החיה ההזמנה תיכתב ליומן ותישלח התראה לבעלת העסק.</small></div></section>
-  <section class="gallery"><p class="eyebrow">גלריית עבודות</p><h2>מקום לעבודות שמדברות בעד עצמן.</h2><div class="gallery-grid beauty-gallery-grid">
-    <figure><img src="https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/pedicure-natural-v1.png" alt="פדיקור טבעי בגוון ניוד"><figcaption>פדיקור<small>טיפוח מדויק וגימור טבעי</small></figcaption></figure>
-    <figure><img src="https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/manicure-natural-v1.png" alt="מניקור טבעי בגוון ניוד"><figcaption>מניקור<small>מראה נקי ומדויק</small></figcaption></figure>
-    <figure><img src="https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/nail-building-micro-french-v1.png" alt="בניית ציפורניים עם מיקרו פרנץ׳"><figcaption>בניית ציפורניים<small>מיקרו־פרנץ׳ עדין</small></figcaption></figure>
-    <figure><img src="https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/gel-polish-dusty-rose-v1.png" alt="לק ג׳ל בגוון ורוד אבקתי"><figcaption>לק ג׳ל<small>גוון ורוד־אבקתי עדין</small></figcaption></figure>
-  </div></section>
-  <section class="policy"><strong>שינוי או ביטול תור</strong><p>אפשר עד 48 שעות לפני המועד שנקבע.</p></section>
-</main><footer>DEMO PROJECT · FLOWPAGE STUDIO · 2026</footer>
-<script>const FLOWPAGE_PEDICURE_WEBAPP='https://script.google.com/macros/s/AKfycbx4VaE6TprI0KAKSa-taA41zFu9Rafhj_LS7s9nMeqq2Nl4BrISIiU4QzqWnDwCOZmP/exec';let day='',time='';const s=document.querySelector('#status'),t=document.querySelector('#treatment');document.querySelectorAll('.days button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.days button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');day=b.dataset.day;s.textContent='נבחר: '+day+'. עכשיו בחרי שעה.'});document.querySelectorAll('.times button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.times button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');time=b.textContent;s.textContent=day?'נבחר: '+day+' בשעה '+time+'.':'בחרי גם יום.'});document.querySelector('#confirm').onclick=()=>{window.location.href=FLOWPAGE_PEDICURE_WEBAPP}</script>
-<script src="flowpage-nav.js"></script>
-</body></html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pedicure Flow | FlowPage Studio</title><link rel="stylesheet" href="../../style.css"><link rel="stylesheet" href="flowpage-nav.css"><link rel="stylesheet" href="pedicure-manicure.css"></head>
+<body class="beauty"><main>
+<nav class="nav"><a class="logo" href="../../">FLOW<span>PAGE</span><small>STUDIO</small></a><div><a class="nav-link" href="#solution">הפתרון</a><a class="nav-link" href="https://script.google.com/macros/s/AKfycbzdg9WGeD_rkB82OOO8eQyw8O22m27xIHHVi9VBP_xU1oA4q16lGp4Quj874GUn3OL2wQ/exec">דף הלקוחה</a><a class="nav-link" href="https://script.google.com/macros/s/AKfycbzdg9WGeD_rkB82OOO8eQyw8O22m27xIHHVi9VBP_xU1oA4q16lGp4Quj874GUn3OL2wQ/exec?view=management">ניהול עסק</a></div></nav>
+<section class="beauty-hero"><p class="eyebrow">CASE 02 · PEDICURE FLOW</p><h1>מהתור הראשון<br><em>ועד ניהול העסק.</em></h1><p class="intro">דף לקוחה נעים לקביעת תור, מחובר ליומן ולמערכת ניהול שמרכזת את העבודה של בעלת העסק.</p><p><a class="button beauty-btn" href="https://script.google.com/macros/s/AKfycbzdg9WGeD_rkB82OOO8eQyw8O22m27xIHHVi9VBP_xU1oA4q16lGp4Quj874GUn3OL2wQ/exec">לדף הלקוחה ←</a> <a class="button secondary-btn" href="https://script.google.com/macros/s/AKfycbzdg9WGeD_rkB82OOO8eQyw8O22m27xIHHVi9VBP_xU1oA4q16lGp4Quj874GUn3OL2wQ/exec?view=management">למסך הניהול ←</a></p></section>
+<section id="solution" class="story"><p class="eyebrow">הפתרון</p><h2>חוויה פשוטה ללקוחה.<br><em>שליטה ברורה לעסק.</em></h2><p>הלקוחה בוחרת טיפול ומועד פנוי. המערכת בודקת את היומן, שומרת את התור ומעדכנת את בעלת העסק. במסך הניהול אפשר לראות תורים, לשנות סטטוסים ולנהל את הגלריה.</p></section>
+<section class="flow-section"><p class="eyebrow">איך זה עובד</p><h2>זרימה אחת לשני צדדים.</h2><div class="flow-cards"><article><span>01</span><h3>הלקוחה</h3><p>בוחרת טיפול, מועד וממלאת פרטים.</p></article><article><span>02</span><h3>האוטומציה</h3><p>בודקת זמינות ושומרת את התור ביומן.</p></article><article><span>03</span><h3>בעלת העסק</h3><p>מנהלת תורים וגלריה ממסך אחד.</p></article></div></section>
+<section class="gallery"><p class="eyebrow">התרחיש</p><h2>מערכת שמחוברת לעבודה.</h2><div class="gallery-grid beauty-gallery-grid"><figure><img src="https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/pedicure-natural-v1.png" alt="פדיקור טבעי"><figcaption>פדיקור<small>טיפול מדויק וגימור טבעי</small></figcaption></figure><figure><img src="https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/manicure-natural-v1.png" alt="מניקור טבעי"><figcaption>מניקור<small>מראה נקי ומדויק</small></figcaption></figure><figure><img src="https://raw.githubusercontent.com/flowpagestudio/flowpage-assets/main/02_scenarios/pedicure-manicure/gallery/nail-building-micro-french-v1.png" alt="בניית ציפורניים"><figcaption>בניית ציפורניים<small>מיקרו־פרנץ׳ עדין</small></figcaption></figure></div></section>
+<footer>DEMO PROJECT · FLOWPAGE STUDIO · 2026</footer></main><script src="flowpage-nav.js"></script></body></html>
